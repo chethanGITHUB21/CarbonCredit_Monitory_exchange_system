@@ -11,8 +11,8 @@
       <a href="/dashboard" class="nav-brand">🌍 CarbonX</a>
       <div class="nav-links">
         <a href="/dashboard">Dashboard</a>
-        <a href="/buyer">Submit Emission</a>
-        <a href="/seller">My Projects</a>
+        <a href="/buyer">Buyer</a>
+        <a href="/verification" class="active">Verification</a>
         <a
           href="#"
           onclick="
@@ -53,12 +53,13 @@
           <label>Project Type</label>
           <select id="fType">
             <option value="">All Types</option>
-            <option value="forestry">Forestry / REDD+</option>
-            <option value="renewable">Renewable Energy</option>
-            <option value="methane">Methane Capture</option>
-            <option value="efficiency">Energy Efficiency</option>
-            <option value="blue_carbon">Blue Carbon</option>
-            <option value="dac">Direct Air Capture</option>
+            <option value="wetland">Wetland</option>
+            <option value="forest">Forest</option>
+            <option value="trees">Trees</option>
+            <option value="carbon_sink_tech">Carbon Sink Tech (DAC/CCS)</option>
+            <option value="coastal">Coastal / Blue Carbon</option>
+            <option value="eco_park">Eco Park / Urban Green</option>
+            <option value="river">River / Pond</option>
           </select>
         </div>
         <div class="form-group">
@@ -187,14 +188,13 @@
       if (!requireAuth()) void 0;
 
       const TYPE_ICONS = {
-        forestry: "🌳",
-        renewable: "☀️",
-        methane: "🔥",
-        efficiency: "⚡",
-        blue_carbon: "🌊",
-        dac: "🏭",
-        soil_carbon: "🌱",
-        cookstove: "🍳",
+        wetland: "🌾",
+        forest: "🌳",
+        trees: "🌲",
+        carbon_sink_tech: "🏭",
+        coastal: "🌊",
+        eco_park: "🌿",
+        river: "🏞️",
       };
 
       let currentProject = null;
@@ -207,7 +207,7 @@
           vintage: document.getElementById("fVintage").value,
         };
         try {
-          const listings = await api.marketplace(params);
+          const listings = await api.getListings(params);
           renderCards(listings.length ? listings : getDemoListings());
         } catch {
           renderCards(getDemoListings());
@@ -314,8 +314,8 @@
         return [
           {
             id: "1",
-            project_name: "Tamil Nadu Reforestation",
-            project_type: "forestry",
+            project_name: "Sundarbans Wetland Restoration",
+            project_type: "wetland",
             methodology: "VCS VM0007",
             baseline_emission: 50000,
             annual_reduction: 18000,
@@ -330,8 +330,8 @@
           },
           {
             id: "2",
-            project_name: "Rajasthan Solar Farm",
-            project_type: "renewable",
+            project_name: "Western Ghats Forest Conservation",
+            project_type: "forest",
             methodology: "Gold Standard GS4GG",
             baseline_emission: 80000,
             annual_reduction: 32000,
@@ -346,8 +346,8 @@
           },
           {
             id: "3",
-            project_name: "Maharashtra Biogas Capture",
-            project_type: "methane",
+            project_name: "Pune Urban Tree Corridor",
+            project_type: "trees",
             methodology: "CDM ACM0010",
             baseline_emission: 25000,
             annual_reduction: 12000,
@@ -362,8 +362,8 @@
           },
           {
             id: "4",
-            project_name: "Kerala Mangrove Restoration",
-            project_type: "blue_carbon",
+            project_name: "Hyderabad DAC Pilot",
+            project_type: "carbon_sink_tech",
             methodology: "Verra VM0033",
             baseline_emission: 15000,
             annual_reduction: 8500,
@@ -378,8 +378,8 @@
           },
           {
             id: "5",
-            project_name: "Gujarat Wind Energy",
-            project_type: "renewable",
+            project_name: "Kerala Mangrove Restoration",
+            project_type: "coastal",
             methodology: "Gold Standard V2",
             baseline_emission: 60000,
             annual_reduction: 24000,

@@ -3,6 +3,7 @@ const router = require("express").Router();
 const axios = require("axios");
 const pool = require("../config/db");
 const auth = require("../middleware/auth");
+const { PROJECT_TYPES } = require("../config/projectTypes");
 
 const FASTAPI = process.env.FASTAPI_BASE_URL || "http://localhost:8000";
 
@@ -94,128 +95,129 @@ router.post("/emission/calculate", auth, async (req, res) => {
   }
 });
 
-// ── POST /carbon/seller/calculate ──────────────────────────
-router.post("/seller/calculate", auth, async (req, res) => {
-  try {
-    const fastapiRes = await axios.post(
-      `${FASTAPI}/api/v1/seller/calculate`,
-      req.body,
-    );
-    res.json(fastapiRes.data);
-  } catch (err) {
-    res
-      .status(err.response?.status || 500)
-      .json({ error: err.response?.data?.detail || "Failed" });
-  }
-});
+// // ── POST /carbon/seller/calculate ──────────────────────────
+// router.post("/seller/calculate", auth, async (req, res) => {
+//   try {
+//     const fastapiRes = await axios.post(
+//       `${FASTAPI}/api/v1/seller/calculate`,
+//       req.body,
+//     );
+//     res.json(fastapiRes.data);
+//   } catch (err) {
+//     res
+//       .status(err.response?.status || 500)
+//       .json({ error: err.response?.data?.detail || "Failed" });
+//   }
+// });
 
-// ── GET /carbon/dashboard/summary ──────────────────────────
-router.get("/dashboard/summary", auth, async (req, res) => {
-  const { country, state, district } = req.query;
-  try {
-    const filters = [];
-    const values = [];
-    if (country && String(country).trim()) {
-      values.push(String(country).trim());
-      filters.push(`LOWER(TRIM(u.country)) = LOWER(TRIM($${values.length}))`);
-    }
-    if (state && String(state).trim()) {
-      values.push(String(state).trim());
-      filters.push(`LOWER(TRIM(u.state)) = LOWER(TRIM($${values.length}))`);
-    }
-    if (district && String(district).trim()) {
-      values.push(String(district).trim());
-      filters.push(`LOWER(TRIM(u.district)) = LOWER(TRIM($${values.length}))`);
-    }
-    const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+// // ── GET /carbon/dashboard/summary ──────────────────────────
+// router.get("/dashboard/summary", auth, async (req, res) => {
+//   const { country, state, district } = req.query;
+//   try {
+//     const filters = [];
+//     const values = [];
+//     if (country && String(country).trim()) {
+//       values.push(String(country).trim());
+//       filters.push(`LOWER(TRIM(u.country)) = LOWER(TRIM($${values.length}))`);
+//     }
+//     if (state && String(state).trim()) {
+//       values.push(String(state).trim());
+//       filters.push(`LOWER(TRIM(u.state)) = LOWER(TRIM($${values.length}))`);
+//     }
+//     if (district && String(district).trim()) {
+//       values.push(String(district).trim());
+//       filters.push(`LOWER(TRIM(u.district)) = LOWER(TRIM($${values.length}))`);
+//     }
+//     const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
-    const emissionRes = await pool.query(
-      `SELECT er.year::int AS year,
-              COALESCE(SUM(er.total_co2e), 0) AS emission_co2e,
-              COALESCE(SUM(er.total_absorption), 0) AS absorption_co2e
-       FROM emission_records er
-       JOIN buyer_profiles bp ON bp.id = er.buyer_id
-       JOIN users u ON u.id = bp.user_id
-       ${whereClause}
-       GROUP BY er.year
-       ORDER BY er.year`,
-      values,
-    );
+//     const emissionRes = await pool.query(
+//       `SELECT er.year::int AS year,
+//               COALESCE(SUM(er.total_co2e), 0) AS emission_co2e,
+//               COALESCE(SUM(er.total_absorption), 0) AS absorption_co2e
+//        FROM emission_records er
+//        JOIN buyer_profiles bp ON bp.id = er.buyer_id
+//        JOIN users u ON u.id = bp.user_id
+//        ${whereClause}
+//        GROUP BY er.year
+//        ORDER BY er.year`,
+//       values,
+//     );
 
-    const tradedRes = await pool.query(
-      `SELECT EXTRACT(YEAR FROM ct.trade_date)::int AS year,
-              COALESCE(SUM(ct.credits_traded), 0) AS credits_value
-       FROM carbon_transactions ct
-       JOIN users u ON u.id = ct.buyer_id
-       ${whereClause}
-       GROUP BY EXTRACT(YEAR FROM ct.trade_date)
-       ORDER BY year`,
-      values,
-    );
+//     const tradedRes = await pool.query(
+//       `SELECT EXTRACT(YEAR FROM ct.trade_date)::int AS year,
+//               COALESCE(SUM(ct.credits_traded), 0) AS credits_value
+//        FROM carbon_transactions ct
+//        JOIN users u ON u.id = ct.buyer_id
+//        ${whereClause}
+//        GROUP BY EXTRACT(YEAR FROM ct.trade_date)
+//        ORDER BY year`,
+//       values,
+//     );
 
-    const vintageColRes = await pool.query(
-      `SELECT column_name
-       FROM information_schema.columns
-       WHERE table_schema = 'public'
-         AND table_name = 'seller_projects'
-         AND column_name IN ('vintage', 'vintage_start')
-       ORDER BY CASE WHEN column_name = 'vintage' THEN 0 ELSE 1 END
-       LIMIT 1`,
-    );
-    const vintageCol = vintageColRes.rows[0]?.column_name;
-    const generatedRes = vintageCol
-      ? await pool.query(
-          `SELECT sp.${vintageCol}::int AS year,
-                  COALESCE(SUM(sp.credits_available), 0) AS credits_value
-           FROM seller_projects sp
-           JOIN users u ON u.id = sp.user_id
-           ${whereClause}
-           GROUP BY sp.${vintageCol}
-           ORDER BY sp.${vintageCol}`,
-          values,
-        )
-      : { rows: [] };
+//     const vintageColRes = await pool.query(
+//       `SELECT column_name
+//        FROM information_schema.columns
+//        WHERE table_schema = 'public'
+//          AND table_name = 'seller_projects'
+//          AND column_name IN ('vintage', 'vintage_start')
+//        ORDER BY CASE WHEN column_name = 'vintage' THEN 0 ELSE 1 END
+//        LIMIT 1`,
+//     );
+//     const vintageCol = vintageColRes.rows[0]?.column_name;
+//     const generatedRes = vintageCol
+//       ? await pool.query(
+//           `SELECT sp.${vintageCol}::int AS year,
+//                   COALESCE(SUM(sp.credits_available), 0) AS credits_value
+//            FROM seller_projects sp
+//            JOIN users u ON u.id = sp.user_id
+//            ${whereClause}
+//            GROUP BY sp.${vintageCol}
+//            ORDER BY sp.${vintageCol}`,
+//           values,
+//         )
+//       : { rows: [] };
 
-    const creditsByYear = new Map();
-    tradedRes.rows.forEach((r) => {
-      creditsByYear.set(Number(r.year), Number(r.credits_value) || 0);
-    });
-    generatedRes.rows.forEach((r) => {
-      const y = Number(r.year);
-      const existing = creditsByYear.get(y) || 0;
-      creditsByYear.set(y, Math.max(existing, Number(r.credits_value) || 0));
-    });
+//     const creditsByYear = new Map();
+//     tradedRes.rows.forEach((r) => {
+//       creditsByYear.set(Number(r.year), Number(r.credits_value) || 0);
+//     });
+//     generatedRes.rows.forEach((r) => {
+//       const y = Number(r.year);
+//       const existing = creditsByYear.get(y) || 0;
+//       creditsByYear.set(y, Math.max(existing, Number(r.credits_value) || 0));
+//     });
 
-    const yearly_trend = emissionRes.rows.map((r) => ({
-      year: Number(r.year),
-      emission_co2e: Number(r.emission_co2e) || 0,
-      absorption_co2e: Number(r.absorption_co2e) || 0,
-      credits_traded: creditsByYear.get(Number(r.year)) || 0,
-    }));
+//     const yearly_trend = emissionRes.rows.map((r) => ({
+//       year: Number(r.year),
+//       emission_co2e: Number(r.emission_co2e) || 0,
+//       absorption_co2e: Number(r.absorption_co2e) || 0,
+//       credits_traded: creditsByYear.get(Number(r.year)) || 0,
+//     }));
 
-    const totals = yearly_trend.reduce(
-      (acc, row) => {
-        acc.emission += row.emission_co2e;
-        acc.absorption += row.absorption_co2e;
-        return acc;
-      },
-      { emission: 0, absorption: 0 },
-    );
-    const emissionBase = totals.emission || 1;
+//     const totals = yearly_trend.reduce(
+//       (acc, row) => {
+//         acc.emission += row.emission_co2e;
+//         acc.absorption += row.absorption_co2e;
+//         return acc;
+//       },
+//       { emission: 0, absorption: 0 },
+//     );
+//     const emissionBase = totals.emission || 1;
 
-    return res.json({
-      yearly_trend,
-      top_indicators: {
-        absorption_pct: (totals.absorption / emissionBase) * 100,
-        emission_pct: ((totals.emission - totals.absorption) / emissionBase) * 100,
-      },
-      unit: "t CO2e",
-    });
-  } catch (err) {
-    console.error("Dashboard summary failed:", err.message);
-    return res.status(500).json({ error: "Dashboard summary failed" });
-  }
-});
+//     return res.json({
+//       yearly_trend,
+//       top_indicators: {
+//         absorption_pct: (totals.absorption / emissionBase) * 100,
+//         emission_pct:
+//           ((totals.emission - totals.absorption) / emissionBase) * 100,
+//       },
+//       unit: "t CO2e",
+//     });
+//   } catch (err) {
+//     console.error("Dashboard summary failed:", err.message);
+//     return res.status(500).json({ error: "Dashboard summary failed" });
+//   }
+// });
 
 // ── GET /carbon/dashboard/region ───────────────────────────
 router.get("/dashboard/region", auth, async (req, res) => {
@@ -316,6 +318,9 @@ router.get("/districts", auth, async (req, res) => {
 // ── GET /carbon/marketplace ─────────────────────────────────
 router.get("/marketplace", auth, async (req, res) => {
   const { project_type, min_price, max_price, vintage } = req.query;
+  if (project_type && !PROJECT_TYPES.includes(project_type)) {
+    return res.status(400).json({ error: "Unsupported project_type" });
+  }
   let query = `SELECT sp.*, u.organisation_name, u.country, u.state
                FROM seller_projects sp
                JOIN users u ON u.id = sp.user_id
@@ -385,28 +390,29 @@ module.exports = router;
 
 // ── GET /carbon/absorption/calculate ────────────────────────────────────────
 // Proxies absorption parameters to Python engine. Returns calculated CO2e absorbed.
-// Params: forest_area_m2, tree_count, other_absorption_co2e
-router.get('/absorption/calculate', auth, async (req, res) => {
-  const { forest_area_m2, tree_count, other_absorption_co2e } = req.query;
-  try {
-    const fastapiRes = await axios.post(
-      `${FASTAPI}/api/v1/emission/calculate`,
-      {
-        project_id:             'absorption-calc-' + Date.now(),
-        forest_area_m2:         parseFloat(forest_area_m2)        || null,
-        tree_count:             parseInt(tree_count)               || null,
-        other_absorption_co2e:  parseFloat(other_absorption_co2e) || null,
-      },
-      { timeout: 10000 }
-    );
-    const d = fastapiRes.data;
-    return res.json({
-      total_absorption_co2e: d.total_absorption_co2e || 0,
-      sink_breakdown:        d.sink_breakdown        || {},
-      scientific_standard:   'IPCC 2006 + 2019 Refinement | GWP-100 AR5',
-      // AFOLU absorption rates: forest 12 tCO2e/ha/yr | tree 0.02 tCO2e/yr
-    });
-  } catch (err) {
-    return res.status(502).json({ error: 'Python accounting engine unavailable' });
-  }
-});
+// Params: area_m2, tree_count, other_absorption_co2e
+// router.get("/absorption/calculate", auth, async (req, res) => {
+//   const { area_m2, tree_count, other_absorption_co2e } = req.query;
+//   try {
+//     const area = parseFloat(area_m2);
+//     const trees = parseInt(tree_count);
+//     const other = parseFloat(other_absorption_co2e);
+//     const fastapiRes = await axios.post(
+//       `${FASTAPI}/api/v1/absorption/calculate`,
+//       {
+//         project_id: "absorption-calc-" + Date.now(),
+//         forest: Number.isFinite(area) ? { area_m2: area } : null,
+//         trees: Number.isFinite(trees) ? { number_of_trees: trees } : null,
+//         carbon_sink_tech: Number.isFinite(other)
+//           ? { co2_captured_tonnes_per_year: other }
+//           : null,
+//       },
+//       { timeout: 10000 },
+//     );
+//     return res.json(fastapiRes.data);
+//   } catch (err) {
+//     return res
+//       .status(502)
+//       .json({ error: "Python accounting engine unavailable" });
+//   }
+// });

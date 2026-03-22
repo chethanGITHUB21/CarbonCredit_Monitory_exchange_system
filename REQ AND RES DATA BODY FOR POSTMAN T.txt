@@ -1,0 +1,190 @@
+REQ AND RES DATA BODY FOR POSTMAN TESTING
+
+1: POST /api/projects
+
+request:
+{
+  "project_name": "Sundarbans Wetland Restoration",
+  "project_type": "wetland",
+  "description": "Community-led restoration in buffer zones",
+  "country_id": 1,
+  "state_id": 10,
+  "district_id": 120,
+  "latitude": 22.1201,
+  "longitude": 88.7136
+}
+response:
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "user_id": "b1f6d5a9-1dd5-4a70-9c63-9e0b3f1c6d21",
+  "project_name": "Sundarbans Wetland Restoration",
+  "project_type": "wetland",
+  "description": "Community-led restoration in buffer zones",
+  "country_id": 1,
+  "state_id": 10,
+  "district_id": 120,
+  "project_id": 42,
+  "location": {
+    "type": "Point",
+    "coordinates": [88.7136, 22.1201]
+  },
+  "created_at": "2026-03-18T09:15:42.123Z"
+}
+
+
+GET /api/projects/:id
+request:
+GET /api/projects/3fa85f64-5717-4562-b3fc-2c963f66afa6
+response:
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "user_id": "b1f6d5a9-1dd5-4a70-9c63-9e0b3f1c6d21",
+  "project_name": "Sundarbans Wetland Restoration",
+  "project_type": "wetland",
+  "description": "Community-led restoration in buffer zones",
+  "country_id": 1,
+  "state_id": 10,
+  "district_id": 120,
+  "project_id": 42,
+  "organisation_name": "GreenEarth India",
+  "country": "India",
+  "state": "West Bengal",
+  "district": "South 24 Parganas",
+  "geojson": {
+    "type": "Point",
+    "coordinates": [88.7136, 22.1201]
+  },
+  "created_at": "2026-03-18T09:15:42.123Z"
+}
+
+2: POST api/projects/:id/absorption
+
+request:
+{
+  "wetland": { "area_m2": 150000 },
+  "forest": { "area_m2": 2000000 },
+  "trees": { "number_of_trees": 5000 },
+  "carbon_sink_tech": { "co2_captured_tonnes_per_year": 120 },
+  "coastal": { "area_m2": 80000 },
+  "eco_park": { "area_m2": 40000 },
+  "river": { "area_m2": 100000 },
+  "year": 2026
+},
+{
+  "area_m2": 2000000,
+  "tree_count": 5000,
+  "other_absorption_co2e": 120,
+  "year": 2026
+}
+
+response:
+{
+  "project_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "co2_absorbed": 2790.0,
+  "area_hectares": 237.0,
+  "year": 2026,
+  "engine_result": {
+    "total_emission_co2e": 0.0,
+    "total_absorption_co2e": 2790.0,
+    "net_balance": -2790.0,
+    "status": "NET SINK",
+    "offset_ratio_percent": 100.0,
+    "gas_wise_totals": {
+      "CO2": 0.0,
+      "CH4": 0.0,
+      "N2O": 0.0,
+      "HFC-134a": 0.0,
+      "SF6": 0.0
+    },
+    "sector_breakdown": {},
+    "sink_breakdown": {
+      "wetland": 375.0,
+      "forest": 2400.0,
+      "trees": 100.0,
+      "carbon_sink_tech": 120.0,
+      "coastal": 160.0,
+      "eco_park": 60.0,
+      "river": 50.0
+    },
+    "project_id": "absorption-calc-1710732000000",
+    "scientific_standard": "IPCC 2006 + 2019 Refinement | GWP-100 AR5"
+  },
+  "scientific_standard": "IPCC 2006 + 2019 Refinement | GWP-100 AR5"
+}
+
+GET api/projects/:id/absorption
+
+request:
+GET /api/projects/3fa85f64-5717-4562-b3fc-2c963f66afa6/absorption
+response:
+[
+  {
+    "id": 42,
+    "co2_absorbed": 2790.0,
+    "area_hectares": 237.0,
+    "year": 2026,
+    "recorded_at": "2026-03-18T10:05:11.334Z"
+  }
+]
+
+3: POST - /api/Credits
+
+request:
+{
+  "project_name": "Sundarbans Wetland Restoration",
+  "project_type": "wetland",
+  "methodology": "VCS VM0007",
+  "baseline_emission": 50000,
+  "annual_reduction": 18000,
+  "leakage": 1800,
+  "buffer_percent": 10,
+  "price_per_credit": 11.5,
+  "vintage_start": 2024,
+  "vintage_end": 2024,
+  "project_boundary": "South 24 Parganas",
+  "verification_doc_url": "https://example.com/doc.pdf"
+}
+
+response:
+{
+  "id": "9d9e1b67-9c1a-4d18-9a2d-f203c3b0e5f1",
+  "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "project_name": "Sundarbans Wetland Restoration",
+  "project_type": "wetland",
+  "methodology": "VCS VM0007",
+  "baseline_emission": 50000,
+  "annual_reduction": 18000,
+  "leakage": 1800,
+  "buffer_percent": 10,
+  "credits_available": 14580,
+  "price_per_credit": 11.5,
+  "vintage_start": 2024,
+  "vintage_end": 2024,
+  "project_boundary": "South 24 Parganas",
+  "verification_doc_url": "https://example.com/doc.pdf",
+  "status": "pending",
+  "net_credits_available": 14580,
+  "formula": "Net Credits = (annual_reduction - leakage) × (1 - buffer%/100)",
+  "scientific_standard": "IPCC 2006 + 2019 Refinement | GWP-100 AR5"
+}
+
+GET - /api/credits/Listing
+
+request:
+GET /api/credits/listing?project_type=wetland&min_price=5&max_price=30&vintage=2024
+
+response:
+[
+  {
+    "id": "9d9e1b67-9c1a-4d18-9a2d-f203c3b0e5f1",
+    "project_name": "Sundarbans Wetland Restoration",
+    "project_type": "wetland",
+    "price_per_credit": 11.5,
+    "credits_available": 14580,
+    "vintage_start": 2024,
+    "vintage_end": 2024,
+    "organisation_name": "GreenEarth India",
+    "country": "India",
+    "state": "West Bengal"
+  }
+]

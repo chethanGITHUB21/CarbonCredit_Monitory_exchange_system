@@ -65,7 +65,15 @@ CREATE TABLE IF NOT EXISTS projects (
     id           UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id      UUID         REFERENCES users(id) ON DELETE CASCADE,
     project_name VARCHAR(200) NOT NULL,
-    project_type VARCHAR(50),          -- 'emission' | 'absorption' | 'reforestation' etc.
+    project_type VARCHAR(50) CHECK (project_type IN (
+        'wetland',
+        'forest',
+        'trees',
+        'carbon_sink_tech',
+        'coastal',
+        'eco_park',
+        'river'
+    )),
     description  TEXT,
     country_id   INT          REFERENCES countries(id),
     state_id     INT          REFERENCES states(id),
@@ -115,13 +123,11 @@ CREATE INDEX IF NOT EXISTS idx_absorptions_year    ON absorptions(year);
 -- 1 credit = 1 tCO2e reduction/removal (IPCC standard).
 CREATE TABLE IF NOT EXISTS carbon_credits (
     id               SERIAL       PRIMARY KEY,
-    project_id       UUID         REFERENCES projects(id),
     total_credits    NUMERIC(12,2),
     available_credits NUMERIC(12,2),
     price_per_credit NUMERIC(10,2),
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_carbon_credits_project ON carbon_credits(project_id);
 
 -- ── TABLE: credit_listings ───────────────────────────────────────────────────
 -- Marketplace listings created by sellers.

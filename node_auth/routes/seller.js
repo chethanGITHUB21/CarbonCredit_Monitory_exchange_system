@@ -3,10 +3,14 @@ const router = require("express").Router();
 const pool = require("../config/db");
 const auth = require("../middleware/auth");
 const { body, validationResult } = require("express-validator");
+const { PROJECT_TYPES } = require("../config/projectTypes");
 
 const sellerRules = [
   body("project_name").notEmpty(),
-  body("project_type").notEmpty(),
+  body("project_type")
+    .notEmpty()
+    .isIn(PROJECT_TYPES)
+    .withMessage("project_type must be a supported absorption sink"),
   body("methodology").notEmpty(),
   body("baseline_emission").isFloat({ min: 0 }),
   body("annual_reduction").isFloat({ min: 0 }),

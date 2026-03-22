@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Verification — CarbonX</title>
+    <link rel="stylesheet" href="/css/new.css" />
+    <style>
+      .verification-list {
+        display: grid;
+        gap: 1rem;
+      }
+      .verification-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      .verification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.2rem;
+        cursor: pointer;
+        gap: 1rem;
+      }
+      .verify-name {
+        font-weight: 700;
+      }
+      .verify-meta {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .status-badge {
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+      }
+      .status-badge.pending {
+        color: var(--yellow);
+        border-color: rgba(241, 196, 15, 0.3);
+      }
+      .status-badge.approved {
+        color: var(--green);
+        border-color: rgba(46, 204, 113, 0.35);
+      }
+      .status-badge.rejected {
+        color: var(--red);
+        border-color: rgba(231, 76, 60, 0.35);
+      }
+      .verification-body {
+        display: none;
+        border-top: 1px solid var(--border);
+        padding: 1rem 1.2rem 1.2rem;
+      }
+      .verification-card.open .verification-body {
+        display: block;
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+      }
+      .detail-item label {
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+      .detail-item .value {
+        font-weight: 700;
+        margin-top: 0.2rem;
+      }
+      .doc-link {
+        font-size: 0.85rem;
+      }
+      .status-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.6rem;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="/dashboard" class="nav-brand">🌍 CarbonX</a>
+      <div class="nav-links">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/buyer">Buyer</a>
+        <a href="/seller">Seller</a>
+        <a href="/marketplace">Marketplace</a>
+        <a
+          href="#"
+          onclick="
+            logout();
+            return false;
+          "
+          >Logout</a
+        >
+      </div>
+    </nav>
+
+    <div class="form-page">
+      <h1>✅ Verification Queue</h1>
+      <p class="page-subtitle">
+        Review seller submissions and approve or reject listings.
+      </p>
+
+      <div id="alert-box"></div>
+      <div class="verification-list" id="verificationList"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+      if (!requireAuth()) void 0;
+
+      const listEl = document.getElementById("verificationList");
+      const alertBox = document.getElementById("alert-box");
+
+      function formatNumber(n) {
+        const num = Number(n || 0);
+        return Number.isFinite(num) ? num.toFixed(2) : "—";
+      }
+
+      function renderItems(items) {
+        if (!items.length) {
+          listEl.innerHTML =
+            '<div class="alert alert-info">No verification requests found.</div>';
+          return;
+        }
+        listEl.innerHTML = items
+          .map((v) => {
+            const status = v.verification_status || "pending";
+            const listingStatus = v.listing_status || "pending";
+            const docLink = v.url_document
+              ? `<a class="doc-link" href="${v.url_document}" target="_blank">Open document</a>`
+              : "—";
+            return `
+              <div class="verification-card" data-id="${v.id}">
+                <div class="verification-header">
+                  <div>
+                    <div class="verify-name">${v.organisation_name || "—"}</div>
+                    <div class="verify-meta">${v.country || "—"} • ${v.state || "—"}</div>
+                  </div>
+                  <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <div class="status-badge ${status}">${status}</div>
+                    <div class="status-badge ${listingStatus}">listing ${listingStatus}</div>
+                  </div>
+                </div>
+                <div class="verification-body">
+                  <div class="detail-grid">
+                    <div class="detail-item">
+                      <label>Price per Credit</label>
+                      <div class="value">₹ ${formatNumber(v.price_per_credit)}</div>
+                    </div>
+                    <div class="detail-item">
+                      <label>Total Credits</label>
+                      <div class="value">${formatNumber(v.total_credits)}</div>
+                    </div>
+                    <div class="detail-item">
+                      <label>Credits for Sale</label>
+                      <div class="value">${formatNumber(v.credits_for_sale)}</div>
+                    </div>
+                    <div class="detail-item">
+                      <label>Document</label>
+                      <div class="value">${docLink}</div>
+                    </div>
+                  </div>
+                  <div class="status-actions">
+                    <button class="btn btn-green" data-action="approved">Approve</button>
+                    <button class="btn btn-red" data-action="rejected">Reject</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      async function loadVerifications() {
+        alertBox.innerHTML = "";
+        try {
+          const items = await api.getVerifications();
+          renderItems(items || []);
+        } catch (err) {
+          alertBox.innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
+        }
+      }
+
+      listEl.addEventListener("click", async (e) => {
+        const card = e.target.closest(".verification-card");
+        if (!card) return;
+
+        if (e.target.matches("[data-action]")) {
+          const status = e.target.getAttribute("data-action");
+          try {
+            await api.updateVerificationStatus(card.dataset.id, status);
+            showToast(
+              `Verification ${status}`,
+              status === "approved" ? "success" : "error",
+            );
+            await loadVerifications();
+          } catch (err) {
+            showToast(err.message || "Update failed", "error");
+          }
+          return;
+        }
+
+        card.classList.toggle("open");
+      });
+
+      loadVerifications();
+    </script>
+  </body>
+</html>

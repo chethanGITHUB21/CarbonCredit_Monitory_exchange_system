@@ -7,7 +7,7 @@ BASE_URL = "http://localhost:3001"
 
 REGISTER_URL = f"{BASE_URL}/api/auth/register"
 LOGIN_URL = f"{BASE_URL}/api/auth/login"
-EMISSION_URL = f"{BASE_URL}/api/carbon/emission/calculate"
+EMISSION_URL = f"{BASE_URL}/api/credits"
 
 headers = {"Content-Type": "application/json"}
 

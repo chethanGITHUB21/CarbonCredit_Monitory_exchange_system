@@ -68,7 +68,15 @@ CREATE TABLE IF NOT EXISTS seller_projects (
     id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id              UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     project_name         VARCHAR(256) NOT NULL,
-    project_type         VARCHAR(64)  NOT NULL,
+    project_type         VARCHAR(64)  NOT NULL CHECK (project_type IN (
+        'wetland',
+        'forest',
+        'trees',
+        'carbon_sink_tech',
+        'coastal',
+        'eco_park',
+        'river'
+    )),
     methodology          VARCHAR(128) NOT NULL,
     baseline_emission    NUMERIC(18,6) NOT NULL,
     annual_reduction     NUMERIC(18,6) NOT NULL,

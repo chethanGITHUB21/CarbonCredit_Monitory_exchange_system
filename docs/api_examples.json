@@ -52,24 +52,38 @@
     }
   },
 
-  "POST /api/v1/seller/calculate": {
+  "POST /api/v1/carbon/absorption/calculate": {
     "request": {
-      "baseline_emission": 50000,
-      "annual_reduction": 18000,
-      "leakage": 1800,
-      "buffer_percent": 10
-    },
+    "area_m2": 2000000,
+    "tree_count": 5000,
+    "other_absorption_co2e": 120
+   },
     "response": {
-      "baseline_emission_co2e": 50000,
-      "annual_reduction_co2e": 18000,
-      "leakage_co2e": 1800,
-      "buffer_percent": 10,
-      "net_reduction_co2e": 16200,
-      "net_credits_available": 14580,
-      "additionality_co2e": -32000,
-      "formula": "Net Credits = (annual_reduction - leakage) × (1 - buffer%/100)",
-      "scientific_standard": "IPCC 2006 + 2019 Refinement | GWP-100 AR5"
-    }
+    "total_emission_co2e": 0,
+    "total_absorption_co2e": 0,
+    "net_balance": 0,
+    "status": "CARBON NEUTRAL",
+    "offset_ratio_percent": 0,
+    "gas_wise_totals": {
+        "CO2": 0,
+        "CH4": 0,
+        "N2O": 0,
+        "HFC-134a": 0,
+        "SF6": 0
+    },
+    "sector_breakdown": {},
+    "sink_breakdown": {
+        "wetland": 0,
+        "forest": 0,
+        "trees": 0,
+        "carbon_sink_tech": 0,
+        "coastal": 0,
+        "eco_park": 0,
+        "river": 0
+    },
+    "project_id": "absorption-calc-1773739089984",
+    "scientific_standard": "IPCC 2006 + 2019 Refinement | GWP-100 AR5"
+}
   },
 
   "POST /api/auth/register": {

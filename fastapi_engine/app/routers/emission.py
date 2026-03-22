@@ -17,6 +17,7 @@ from app.services.aggregation import (
     GWP, zero_gas_dict, accumulate_gases, to_co2e, aggregate_results,
     m2_to_hectare, litres_to_tonne_fuel, kg_to_tonnes
 )
+from app.services.pipeline import run_absorption_pipeline
 from app.core.ef_registry import (
     lookup_industry_ef, lookup_vehicle_ef, lookup_aviation_ef, lookup_ippu_ef,
     AVIATION_EF_GENERIC, IPPU_EF_GENERIC
@@ -61,6 +62,26 @@ class SellerCalculateRequest(BaseModel):
     annual_reduction: float = Field(..., ge=0, description="t CO2e/yr")
     leakage: float = Field(0.0, ge=0, description="t CO2e/yr")
     buffer_percent: float = Field(10.0, ge=0, le=100)
+
+# ── Absorption-only input schema ─────────────────────────────────────────────
+class AreaSinkInput(BaseModel):
+    area_m2: float = Field(..., ge=0)
+
+class TreesInput(BaseModel):
+    number_of_trees: int = Field(..., ge=0)
+
+class CarbonSinkTechInput(BaseModel):
+    co2_captured_tonnes_per_year: float = Field(..., ge=0)
+
+class AbsorptionCalculateRequest(BaseModel):
+    project_id: str
+    wetland:          AreaSinkInput | None = None
+    forest:           AreaSinkInput | None = None
+    trees:            TreesInput | None = None
+    carbon_sink_tech: CarbonSinkTechInput | None = None
+    coastal:          AreaSinkInput | None = None
+    eco_park:         AreaSinkInput | None = None
+    river:            AreaSinkInput | None = None
 
 # ─────────────────────────────────────────────────────────────
 # STUBBLE EF (IPCC 2006 Vol.4 Table 2.5)
@@ -155,30 +176,57 @@ async def calculate_emission(req: EmissionCalculateRequest):
 # ─────────────────────────────────────────────────────────────
 # POST /api/v1/seller/calculate
 # ─────────────────────────────────────────────────────────────
-@router.post("/seller/calculate")
-async def calculate_seller(req: SellerCalculateRequest):
+# @router.post("/seller/calculate")
+# async def calculate_seller(req: SellerCalculateRequest):
+#     """
+#     Net Credit Calculation for Sellers.
+#     Net Credits = (annual_reduction − leakage) × (1 − buffer_percent/100)
+#     All values in t CO2e (IPCC Tier 1 basis).
+#     """
+#     net_reduction = req.annual_reduction - req.leakage
+#     net_credits = net_reduction * (1 - req.buffer_percent / 100)
+#     additionality = req.annual_reduction - req.baseline_emission
+#     return {
+#         "baseline_emission_co2e": req.baseline_emission,
+#         "annual_reduction_co2e": req.annual_reduction,
+#         "leakage_co2e": req.leakage,
+#         "buffer_percent": req.buffer_percent,
+#         "net_reduction_co2e": round(net_reduction, 6),
+#         "net_credits_available": round(max(0, net_credits), 6),
+#         "additionality_co2e": round(additionality, 6),
+#         "formula": "Net Credits = (annual_reduction - leakage) × (1 - buffer%/100)",
+#         "scientific_standard": "IPCC 2006 + 2019 Refinement | GWP-100 AR5",
+#     }
+
+
+# ─────────────────────────────────────────────────────────────
+# POST /api/v1/absorption/calculate
+@router.post("/absorption/calculate")
+async def calculate_absorption(req: AbsorptionCalculateRequest):
     """
-    Net Credit Calculation for Sellers.
-    Net Credits = (annual_reduction − leakage) × (1 − buffer_percent/100)
-    All values in t CO2e (IPCC Tier 1 basis).
+    Absorption-only calculation across 7 sinks.
+    Returns total absorption and sink breakdown (t CO2e).
     """
-    net_reduction = req.annual_reduction - req.leakage
-    net_credits = net_reduction * (1 - req.buffer_percent / 100)
-    additionality = req.annual_reduction - req.baseline_emission
+    absorption_payload = {
+        "wetland":          req.wetland.model_dump()          if req.wetland else None,
+        "forest":           req.forest.model_dump()           if req.forest else None,
+        "trees":            req.trees.model_dump()            if req.trees else None,
+        "carbon_sink_tech": req.carbon_sink_tech.model_dump() if req.carbon_sink_tech else None,
+        "coastal":          req.coastal.model_dump()          if req.coastal else None,
+        "eco_park":         req.eco_park.model_dump()         if req.eco_park else None,
+        "river":            req.river.model_dump()            if req.river else None,
+    }
+
+    absorption_gas_dicts = run_absorption_pipeline(absorption_payload)
+    agg = aggregate_results({}, absorption_gas_dicts)
+
     return {
-        "baseline_emission_co2e": req.baseline_emission,
-        "annual_reduction_co2e": req.annual_reduction,
-        "leakage_co2e": req.leakage,
-        "buffer_percent": req.buffer_percent,
-        "net_reduction_co2e": round(net_reduction, 6),
-        "net_credits_available": round(max(0, net_credits), 6),
-        "additionality_co2e": round(additionality, 6),
-        "formula": "Net Credits = (annual_reduction - leakage) × (1 - buffer%/100)",
+        **agg,
+        "project_id": req.project_id,
         "scientific_standard": "IPCC 2006 + 2019 Refinement | GWP-100 AR5",
     }
 
 
-# ─────────────────────────────────────────────────────────────
 # GET /api/v1/dashboard/summary
 # ─────────────────────────────────────────────────────────────
 @router.get("/dashboard/summary")

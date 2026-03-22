@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Dashboard — CarbonX</title>
-    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/new.css" />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/ol@v10.1.0/ol.css"
@@ -17,10 +17,19 @@
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-brand">🌍 CarbonX</div>
-        <a href="/dashboard" class="active">📊 Dashboard</a>
-        <a href="/buyer">📝 Submit Emission</a>
-        <a href="/seller">🌿 My Projects</a>
-        <a href="/marketplace">💹 Marketplace</a>
+        <div
+          class="theme-toggle"
+          onclick="toggleTheme()"
+          title="Toggle dark mode"
+        >
+          <span class="toggle-icon" id="themeIcon">☀️</span>
+          <div class="toggle-track"></div>
+          <span class="theme-toggle-label" id="themeLabel">LIGHT</span>
+        </div>
+        <a href="/buyer">📝 BUYER SUBMITTION</a>
+        <a href="/seller">🌿 SELLER SUBMITTION</a>
+        <a href="/marketplace">💹 MARKETPLACE</a>
+        <a href="/verification">✅ VERIFICATION</a>
         <a
           href="#"
           onclick="
@@ -439,8 +448,8 @@
         };
         try {
           const [summary, region] = await Promise.all([
-            api.dashboardSummary(params),
-            api.dashboardRegion(params),
+            api.dashboardYearly(params),
+            api.dashboardRegional(params),
           ]);
           yearlyData = Array.isArray(summary.yearly_trend)
             ? summary.yearly_trend
@@ -609,6 +618,29 @@
 
       // Init
       loadDashboard();
+
+      //this is the new css attachment
+      (function () {
+        const saved = localStorage.getItem("theme") || "light";
+        document.documentElement.setAttribute("data-theme", saved);
+        updateToggleUI(saved);
+      })();
+
+      function toggleTheme() {
+        const current = document.documentElement.getAttribute("data-theme");
+        const next = current === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+        updateToggleUI(next);
+      }
+
+      function updateToggleUI(theme) {
+        const icon = document.getElementById("themeIcon");
+        const label = document.getElementById("themeLabel");
+        if (!icon || !label) return;
+        icon.textContent = theme === "dark" ? "🌙" : "☀️";
+        label.textContent = theme === "dark" ? "DARK" : "LIGHT";
+      }
     </script>
   </body>
 </html>

@@ -4,14 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Sell Credits — CarbonX</title>
-    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/new.css" />
   </head>
   <body>
     <nav class="navbar">
       <a href="/dashboard" class="nav-brand">🌍 CarbonX</a>
       <div class="nav-links">
         <a href="/dashboard">Dashboard</a>
+        <a href="/buyer">Buyer</a>
         <a href="/marketplace">Marketplace</a>
+        <a href="/verification" class="active">Verification</a>
         <a
           href="#"
           onclick="
@@ -49,14 +51,15 @@
             <div class="form-group">
               <label>Project Type *</label>
               <select name="project_type" required>
-                <option value="forestry">Forestry / REDD+</option>
-                <option value="renewable">Renewable Energy</option>
-                <option value="methane">Methane Capture</option>
-                <option value="efficiency">Energy Efficiency</option>
-                <option value="cookstove">Clean Cookstove</option>
-                <option value="soil_carbon">Soil Carbon</option>
-                <option value="blue_carbon">Blue Carbon</option>
-                <option value="dac">Direct Air Capture</option>
+                <option value="wetland">Wetland</option>
+                <option value="forest">Forest</option>
+                <option value="trees">Trees</option>
+                <option value="carbon_sink_tech">
+                  Carbon Sink Tech (DAC/CCS)
+                </option>
+                <option value="coastal">Coastal / Blue Carbon</option>
+                <option value="eco_park">Eco Park / Urban Green</option>
+                <option value="river">River / Pond</option>
               </select>
             </div>
             <div class="form-group">
@@ -67,6 +70,52 @@
                 placeholder="e.g. VCS VM0007, Gold Standard GS4GG"
                 required
               />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Wetland Area (sq m)</label>
+              <input type="number" name="wetland_area_m2" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Forest Area (sq m)</label>
+              <input type="number" name="forest_area_m2" min="0" step="0.01" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Trees (count)</label>
+              <input type="number" name="trees_count" min="0" step="1" />
+            </div>
+            <div class="form-group">
+              <label>Carbon Sink Tech (t CO₂/yr)</label>
+              <input
+                type="number"
+                name="carbon_sink_tech"
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Coastal Area (sq m)</label>
+              <input type="number" name="coastal_area_m2" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label>Eco Park Area (sq m)</label>
+              <input
+                type="number"
+                name="eco_park_area_m2"
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>River / Pond Area (sq m)</label>
+              <input type="number" name="river_area_m2" min="0" step="0.01" />
             </div>
           </div>
           <div class="form-group">
@@ -221,7 +270,7 @@
             </div>
           </div>
           <div class="form-group">
-            <label>Price per Credit (USD / t CO₂e) *</label>
+            <label>Price per Credit (INR / t CO₂e) *</label>
             <input
               type="number"
               name="price_per_credit"
@@ -325,38 +374,147 @@
           btn.disabled = true;
 
           try {
+            const requiredNumber = (val, label) => {
+              const n = parseFloat(val);
+              if (!Number.isFinite(n)) {
+                throw new Error(`${label} is required and must be a number`);
+              }
+              return n;
+            };
+            const requiredInt = (val, label) => {
+              const n = parseInt(val);
+              if (!Number.isFinite(n)) {
+                throw new Error(`${label} is required and must be an integer`);
+              }
+              return n;
+            };
+
+            if (!d.project_name) throw new Error("Project Name is required");
+            if (!d.project_type) throw new Error("Project Type is required");
+            if (!d.methodology) throw new Error("Methodology is required");
+
+            const baselineEmission = requiredNumber(
+              d.baseline_emission,
+              "Baseline Emission",
+            );
+            const annualReduction = requiredNumber(
+              d.annual_reduction,
+              "Annual Reduction",
+            );
+            const pricePerCredit = requiredNumber(
+              d.price_per_credit,
+              "Price per Credit",
+            );
+            const vintageStart = requiredInt(
+              d.vintage_start,
+              "Vintage Start Year",
+            );
+            const vintageEnd = requiredInt(d.vintage_end, "Vintage End Year");
+
             const res = await api.registerSellerProject({
               project_name: d.project_name,
               project_type: d.project_type,
               methodology: d.methodology,
-              baseline_emission: parseFloat(d.baseline_emission),
-              annual_reduction: parseFloat(d.annual_reduction),
+              baseline_emission: baselineEmission,
+              annual_reduction: annualReduction,
               leakage: parseFloat(d.leakage) || 0,
               buffer_percent: parseFloat(d.buffer_percent) || 10,
-              price_per_credit: parseFloat(d.price_per_credit),
-              vintage_start: parseInt(d.vintage_start),
-              vintage_end: parseInt(d.vintage_end),
+              price_per_credit: pricePerCredit,
+              vintage_start: vintageStart,
+              vintage_end: vintageEnd,
               project_boundary: d.project_boundary,
               verification_doc_url: d.verification_doc_url || null,
             });
-            document.getElementById("res-baseline").textContent = parseFloat(
-              d.baseline_emission,
-            ).toFixed(4);
-            document.getElementById("res-reduction").textContent = parseFloat(
-              d.annual_reduction,
-            ).toFixed(4);
-            document.getElementById("res-net-red").textContent = (
-              res.net_reduction_co2e || 0
-            ).toFixed(4);
-            document.getElementById("res-credits").textContent = (
-              res.credits_available || 0
-            ).toFixed(4);
+            if (res?.id) {
+              localStorage.setItem("lastProjectId", res.id);
+            }
+            const absorptionPayload = {
+              wetland: d.wetland_area_m2
+                ? { area_m2: parseFloat(d.wetland_area_m2) }
+                : null,
+              forest: d.forest_area_m2
+                ? { area_m2: parseFloat(d.forest_area_m2) }
+                : null,
+              trees: d.trees_count
+                ? { number_of_trees: parseInt(d.trees_count) }
+                : null,
+              carbon_sink_tech: d.carbon_sink_tech
+                ? {
+                    co2_captured_tonnes_per_year: parseFloat(
+                      d.carbon_sink_tech,
+                    ),
+                  }
+                : null,
+              coastal: d.coastal_area_m2
+                ? { area_m2: parseFloat(d.coastal_area_m2) }
+                : null,
+              eco_park: d.eco_park_area_m2
+                ? { area_m2: parseFloat(d.eco_park_area_m2) }
+                : null,
+              river: d.river_area_m2
+                ? { area_m2: parseFloat(d.river_area_m2) }
+                : null,
+            };
+            const hasAbsorption = Object.values(absorptionPayload).some(
+              (v) => v && typeof v === "object",
+            );
+            if (hasAbsorption) {
+              await api.submitProjectAbsorption(res.id, absorptionPayload);
+            }
+
+            const creditPayload = {
+              project_name: d.project_name,
+              project_type: d.project_type,
+              methodology: d.methodology,
+              baseline_emission: baselineEmission,
+              annual_reduction: annualReduction,
+              leakage: parseFloat(d.leakage) || 0,
+              buffer_percent: parseFloat(d.buffer_percent) || 10,
+              price_per_credit: pricePerCredit,
+              vintage_start: vintageStart,
+              vintage_end: vintageEnd,
+              project_boundary: d.project_boundary,
+              verification_doc_url: d.verification_doc_url || null,
+            };
+            const creditRes = await api.createCreditListing(creditPayload);
+
+            const baseline = baselineEmission;
+            const annual = annualReduction;
+            const leak = parseFloat(d.leakage) || 0;
+            const buf = parseFloat(d.buffer_percent) || 10;
+            const netReduction = Math.max(0, annual - leak);
+            const creditsAvail = Math.max(0, netReduction * (1 - buf / 100));
+
+            document.getElementById("res-baseline").textContent =
+              baseline.toFixed(4);
+            document.getElementById("res-reduction").textContent =
+              annual.toFixed(4);
+            document.getElementById("res-net-red").textContent =
+              netReduction.toFixed(4);
+            document.getElementById("res-credits").textContent =
+              creditsAvail.toFixed(4);
             document.getElementById("resultPanel").classList.add("show");
-            showToast("Project registered successfully!", "success");
+            const vStatus = creditRes?.verification_status || "pending";
+            const listingInserted = creditRes?.listing_inserted;
+            if (listingInserted === false) {
+              showToast(
+                `Project saved. Verification ${vStatus}. Listing not created.`,
+                "error",
+              );
+            } else {
+              showToast(
+                `Project saved. Verification ${vStatus}.`,
+                vStatus === "approved" ? "success" : "info",
+              );
+            }
           } catch (err) {
+            const serverErrors = err?.data?.errors;
+            const detail = Array.isArray(serverErrors)
+              ? serverErrors.map((e) => e.msg).join(", ")
+              : err.message;
             document.getElementById("alert-box").innerHTML =
-              `<div class="alert alert-error">❌ ${err.message}</div>`;
-            showToast(err.message, "error");
+              `<div class="alert alert-error">❌ ${detail}</div>`;
+            showToast(detail, "error");
           }
           btn.innerHTML = "🌿 Register Project & List Credits";
           btn.disabled = false;

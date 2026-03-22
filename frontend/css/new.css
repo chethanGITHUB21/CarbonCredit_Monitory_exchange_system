@@ -6,6 +6,10 @@
   margin: 0;
   padding: 0;
 }
+
+/* ════════════════════════════════════════════
+   LIGHT MODE (default)
+   ════════════════════════════════════════════ */
 :root {
   --green: #2ecc71;
   --green-dark: #27ae60;
@@ -19,12 +23,402 @@
   --border: #dde3ea;
   --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   --radius: 12px;
+
+  /* Toggle */
+  --toggle-bg: #dde3ea;
+  --toggle-knob: #ffffff;
+  --toggle-active-bg: #3498db;
 }
+
+/* ════════════════════════════════════════════
+   DARK MODE — Cyber Industrial
+   Activated by: <html data-theme="dark">
+   ════════════════════════════════════════════ */
+[data-theme="dark"] {
+  /* Core palette */
+  --green: #00ff9d;
+  --green-dark: #00cc7d;
+  --red: #ff3b5c;
+  --blue: #00c8ff;
+
+  /* Surfaces */
+  --dark: #0a0e17;
+  --bg: #080c14;
+  --card: #0f1623;
+  --text: #cdd6f4;
+  --muted: #6b7a99;
+  --border: #1e2d45;
+  --shadow:
+    0 2px 20px rgba(0, 200, 255, 0.06), 0 0 0 1px rgba(0, 200, 255, 0.04);
+  --radius: 12px;
+
+  /* Cyber glow accents */
+  --glow-blue: 0 0 12px rgba(0, 200, 255, 0.35);
+  --glow-green: 0 0 12px rgba(0, 255, 157, 0.35);
+  --glow-red: 0 0 12px rgba(255, 59, 92, 0.35);
+
+  /* Toggle */
+  --toggle-bg: #1e2d45;
+  --toggle-knob: #00c8ff;
+  --toggle-active-bg: #00304a;
+}
+
+/* ── Dark mode body texture ── */
+[data-theme="dark"] body {
+  background: var(--bg);
+  background-image:
+    linear-gradient(rgba(0, 200, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 200, 255, 0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Dark mode card scan-line effect ── */
+[data-theme="dark"] .form-section,
+[data-theme="dark"] .auth-card,
+[data-theme="dark"] .chart-card,
+[data-theme="dark"] .indicator,
+[data-theme="dark"] .credit-card,
+[data-theme="dark"] .data-table-wrap,
+[data-theme="dark"] .filters-bar,
+[data-theme="dark"] #MapBody {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: relative;
+}
+
+[data-theme="dark"] .form-section::before,
+[data-theme="dark"] .auth-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue), transparent);
+  opacity: 0.6;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* ── Dark mode navbar glow ── */
+[data-theme="dark"] .navbar {
+  background: rgba(8, 12, 20, 0.95);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 0 rgba(0, 200, 255, 0.1);
+}
+
+/* ── Dark inputs ── */
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea {
+  background: #080c14;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group select:focus {
+  border-color: var(--blue);
+  box-shadow:
+    0 0 0 3px rgba(0, 200, 255, 0.12),
+    var(--glow-blue);
+}
+
+/* ── Dark buttons ── */
+[data-theme="dark"] .btn-primary {
+  background: transparent;
+  color: var(--blue);
+  border: 1px solid var(--blue);
+  box-shadow: var(--glow-blue);
+  letter-spacing: 0.5px;
+}
+[data-theme="dark"] .btn-primary:hover {
+  background: rgba(0, 200, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 200, 255, 0.4);
+}
+
+[data-theme="dark"] .btn-green {
+  background: transparent;
+  color: var(--green);
+  border: 1px solid var(--green);
+  box-shadow: var(--glow-green);
+}
+[data-theme="dark"] .btn-green:hover {
+  background: rgba(0, 255, 157, 0.1);
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+}
+
+[data-theme="dark"] .btn-red {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid var(--red);
+  box-shadow: var(--glow-red);
+}
+
+/* ── Dark indicators ── */
+[data-theme="dark"] .indicator.green .indicator-value {
+  color: var(--green);
+  text-shadow: var(--glow-green);
+}
+[data-theme="dark"] .indicator.red .indicator-value {
+  color: var(--red);
+  text-shadow: var(--glow-red);
+}
+[data-theme="dark"] .indicator.blue .indicator-value {
+  color: var(--blue);
+  text-shadow: var(--glow-blue);
+}
+
+/* ── Dark credit card ── */
+[data-theme="dark"] .credit-card {
+  border-top: 2px solid var(--green);
+  box-shadow:
+    0 0 0 1px var(--border),
+    var(--glow-green);
+}
+[data-theme="dark"] .credit-card .price {
+  color: var(--green);
+  text-shadow: var(--glow-green);
+}
+
+/* ── Dark table ── */
+[data-theme="dark"] th {
+  background: #0a0e17;
+  color: var(--blue);
+  letter-spacing: 1px;
+}
+[data-theme="dark"] td {
+  border-bottom-color: var(--border);
+}
+[data-theme="dark"] tr:hover td {
+  background: rgba(0, 200, 255, 0.04);
+}
+
+/* ── Dark sidebar ── */
+[data-theme="dark"] .sidebar {
+  background: #080c14;
+  border-right: 1px solid var(--border);
+}
+[data-theme="dark"] .sidebar a:hover,
+[data-theme="dark"] .sidebar a.active {
+  background: rgba(0, 200, 255, 0.08);
+  color: var(--blue);
+  box-shadow: inset 3px 0 0 var(--blue);
+}
+
+/* ── Dark form section heading ── */
+[data-theme="dark"] .form-section h2 {
+  color: var(--blue);
+  text-shadow: var(--glow-blue);
+}
+
+/* ── Dark hero ── */
+[data-theme="dark"] .hero {
+  background: linear-gradient(135deg, #060a12 0%, #0a1628 100%);
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="dark"] .hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 60% 40% at 20% 60%,
+      rgba(0, 200, 255, 0.08) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 60% at 80% 20%,
+      rgba(0, 255, 157, 0.06) 0%,
+      transparent 70%
+    );
+  pointer-events: none;
+}
+
+/* ── Dark result panel ── */
+[data-theme="dark"] .result-panel {
+  background: linear-gradient(135deg, #060a12, #0a1628);
+  border: 1px solid var(--border);
+  box-shadow: var(--glow-blue);
+}
+
+/* ── Dark tags ── */
+[data-theme="dark"] .tag {
+  background: rgba(0, 200, 255, 0.08);
+  color: var(--blue);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+}
+
+/* ── Dark scope badge ── */
+[data-theme="dark"] .scope-badge {
+  background: rgba(0, 200, 255, 0.15);
+  color: var(--blue);
+  border: 1px solid rgba(0, 200, 255, 0.3);
+}
+
+/* ── Dark toast ── */
+[data-theme="dark"] .toast {
+  background: #0f1623;
+  border: 1px solid var(--border);
+}
+[data-theme="dark"] .toast.success {
+  border-left-color: var(--green);
+  box-shadow: var(--glow-green);
+}
+[data-theme="dark"] .toast.error {
+  border-left-color: var(--red);
+  box-shadow: var(--glow-red);
+}
+
+/* ── Dark alerts ── */
+[data-theme="dark"] .alert-error {
+  background: rgba(255, 59, 92, 0.08);
+  color: #ff7a92;
+  border-left-color: var(--red);
+}
+[data-theme="dark"] .alert-success {
+  background: rgba(0, 255, 157, 0.08);
+  color: #00ff9d;
+  border-left-color: var(--green);
+}
+
+/* ── Dark map controls ── */
+[data-theme="dark"] .control-panel {
+  background: #0a0e17;
+  border: 1px solid var(--border);
+}
+[data-theme="dark"] .control-panel button {
+  background: transparent;
+  color: var(--blue);
+  border: 1px solid rgba(0, 200, 255, 0.3);
+}
+[data-theme="dark"] .control-panel button:hover {
+  background: rgba(0, 200, 255, 0.1);
+  box-shadow: var(--glow-blue);
+}
+[data-theme="dark"] #info-panel {
+  background: #0a0e17;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+[data-theme="dark"] .time-container {
+  background: #0a0e17;
+  border: 1px solid var(--border);
+}
+
+/* ── Dark compliance footer ── */
+[data-theme="dark"] .compliance-footer {
+  background: #060a12;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+}
+
+/* ─────────────────────────────────────────────
+   THEME TOGGLE SWITCH
+   Place anywhere in navbar:
+   <div class="theme-toggle" ...>
+   ───────────────────────────────────────────── */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.theme-toggle-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  min-width: 28px;
+}
+
+/* The pill track */
+.toggle-track {
+  position: relative;
+  width: 46px;
+  height: 24px;
+  background: var(--toggle-bg);
+  border-radius: 999px;
+  transition: background 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+/* The knob */
+.toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--toggle-knob);
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Active (dark mode ON) state */
+[data-theme="dark"] .toggle-track {
+  background: var(--toggle-active-bg);
+  border-color: rgba(0, 200, 255, 0.3);
+  box-shadow: 0 0 8px rgba(0, 200, 255, 0.2);
+}
+[data-theme="dark"] .toggle-track::after {
+  transform: translateX(22px);
+  background: var(--blue);
+  box-shadow: 0 0 8px rgba(0, 200, 255, 0.6);
+}
+
+/* Icon inside toggle (optional emoji) */
+.toggle-icon {
+  font-size: 0.85rem;
+  transition: opacity 0.2s;
+}
+
+/* ── Original body ── */
 body {
   font-family: "Segoe UI", system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+/* ── Smooth transitions on theme switch ── */
+.navbar,
+.sidebar,
+.card,
+.auth-card,
+.form-section,
+.indicator,
+.credit-card,
+.chart-card,
+.data-table-wrap,
+.filters-bar,
+#MapBody,
+.control-panel,
+#info-panel,
+.time-container,
+.compliance-footer,
+.toast,
+.result-panel,
+.form-group input,
+.form-group select,
+.form-group textarea {
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    color 0.3s ease;
 }
 
 /* ── Navbar ── */
@@ -135,6 +529,7 @@ body {
   justify-content: center;
   flex-wrap: wrap;
 }
+
 .features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -242,7 +637,8 @@ body {
   border-radius: 8px;
   font-size: 0.9rem;
   transition: 0.2s;
-  background: #fff;
+  background: var(--card);
+  color: var(--text);
 }
 .form-group input:focus,
 .form-group select:focus {
@@ -397,7 +793,8 @@ body {
   border: 1.5px solid var(--border);
   border-radius: 8px;
   font-size: 0.85rem;
-  background: #fff;
+  background: var(--card);
+  color: var(--text);
 }
 
 /* ── Tables ── */
@@ -620,6 +1017,8 @@ tr:hover td {
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
+
+/* ── Map ── */
 .map-legend {
   position: absolute;
   top: 20px;
@@ -634,9 +1033,7 @@ tr:hover td {
   display: grid;
   grid-template-columns: 220px 1fr 230px;
   grid-template-rows: 1fr auto;
-  grid-template-areas:
-    "controls map info"
-    "controls timeline timeline";
+  grid-template-areas: "controls map info" "controls timeline timeline";
   gap: 0.7rem;
   height: 600px;
   margin: 0 0 1.5rem;
@@ -647,8 +1044,6 @@ tr:hover td {
   overflow: hidden;
   font-family: Arial, sans-serif;
 }
-
-/* MAP */
 #map {
   grid-area: map;
   width: 100%;
@@ -657,8 +1052,6 @@ tr:hover td {
   border-radius: 10px;
   border: 1px solid var(--border);
 }
-
-/* LEFT CONTROL PANEL */
 .control-panel {
   grid-area: controls;
   background: #f4f4f4;
@@ -667,12 +1060,10 @@ tr:hover td {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
   overflow-y: auto;
 }
-
 .control-panel h3 {
   font-size: 0.88rem;
   margin: 0.3rem 0 0.45rem;
 }
-
 .control-panel button {
   width: 100%;
   margin-bottom: 6px;
@@ -684,12 +1075,9 @@ tr:hover td {
   cursor: pointer;
   font-size: 0.8rem;
 }
-
 .control-panel button:hover {
   background: #0d47a1;
 }
-
-/* INFO PANEL (RIGHT SIDE) */
 #info-panel {
   grid-area: info;
   background: white;
@@ -701,8 +1089,6 @@ tr:hover td {
   overflow: auto;
   font-size: 0.82rem;
 }
-
-/* TIME SLIDER CONTAINER */
 .time-container {
   grid-area: timeline;
   background: white;
@@ -710,18 +1096,16 @@ tr:hover td {
   padding: 8px 12px;
   box-shadow: inset 0 0 0 1px var(--border);
 }
-
 #timeSlider {
   width: 100%;
 }
-
-/* Year Scale */
 .year-scale {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
   margin-top: 4px;
 }
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -742,11 +1126,7 @@ tr:hover td {
   #MapBody {
     grid-template-columns: 1fr;
     grid-template-rows: auto 180px auto auto;
-    grid-template-areas:
-      "controls"
-      "map"
-      "info"
-      "timeline";
+    grid-template-areas: "controls" "map" "info" "timeline";
     height: auto;
   }
   .control-panel {

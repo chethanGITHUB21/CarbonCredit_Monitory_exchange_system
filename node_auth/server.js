@@ -84,6 +84,8 @@ app.get("/register", sendPage("register.html"));
 app.get("/login", sendPage("login.html"));
 app.get("/buyer", sendPage("buyer_form.html"));
 app.get("/seller", sendPage("seller_form.html"));
+app.get("/seller-legacy", sendPage("seller.html"));
+app.get("/verification", sendPage("verification.html"));
 app.get("/marketplace", sendPage("marketplace.html"));
 app.get("/projects", sendPage("projects.html")); // new — falls back to index
 app.get("/transactions", sendPage("transactions.html")); // new — falls back to index

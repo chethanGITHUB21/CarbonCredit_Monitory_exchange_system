@@ -74,6 +74,22 @@ const absorberLayer = new ol.layer.Image({
   source: absorberSource,
   visible: false,
 });
+let activeProjectLayer = null;
+let refreshTimer = null;
+
+function refreshProjectLayers() {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    if (emitterLayer.getVisible()) {
+      emitterSource.updateParams({ _refresh: Date.now() });
+      emitterSource.refresh();
+    }
+    if (absorberLayer.getVisible()) {
+      absorberSource.updateParams({ _refresh: Date.now() });
+      absorberSource.refresh();
+    }
+  }, 5000);
+}
 // ── 3. Map Init ───────────────────────────────────────────────
 const map = new ol.Map({
   target: "map",
@@ -85,14 +101,27 @@ const map = new ol.Map({
 });
 map.addLayer(emissionLayer);
 
+// Ensure WMS redraws after map interactions (prevents stuck tiles on zoom)
+map.on("moveend", () => {
+  wmsSource.updateParams({ _refresh: Date.now() });
+  wmsSource.refresh();
+});
+
+// Ensure map resizes correctly on window resize
+window.addEventListener("resize", () => {
+  map.updateSize();
+});
+
 // Toggle extra project layers
 window.showProjectLayer = function (type) {
   const showEmitter = type === "emitter";
   const showAbsorber = type === "absorber";
 
+  activeProjectLayer = type;
   emitterLayer.setVisible(showEmitter);
   absorberLayer.setVisible(showAbsorber);
 
+  refreshProjectLayers();
   applyMapFilters();
 };
 
@@ -140,6 +169,8 @@ function applyMapFilters() {
   const regionOnly = regionCQL || "INCLUDE";
   emitterSource.updateParams({ CQL_FILTER: regionOnly, _refresh: Date.now() });
   absorberSource.updateParams({ CQL_FILTER: regionOnly, _refresh: Date.now() });
+
+  refreshProjectLayers();
 }
 
 // ── 7. Emission Type Buttons (CO2 / CH4 / CO2e / N2O / Forest) ──
@@ -236,6 +267,18 @@ window.updateMapRegionFilter = function (country, state, district) {
   }
 
   applyMapFilters();
+
+  // Ensure project layers refresh after zoom animation completes
+  map.once("moveend", () => {
+    if (activeProjectLayer === "emitter") {
+      emitterLayer.setVisible(true);
+      absorberLayer.setVisible(false);
+    } else if (activeProjectLayer === "absorber") {
+      absorberLayer.setVisible(true);
+      emitterLayer.setVisible(false);
+    }
+    refreshProjectLayers();
+  });
 };
 
 // ── 10. Auto-zoom to WFS extent of filtered region ───────────
