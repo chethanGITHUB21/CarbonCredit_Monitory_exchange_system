@@ -202,3 +202,8 @@ node server.js
 | `users(country, state, district)` | Composite | Regional aggregation |
 
 > > > > > > > 9b503307fb3435f878ea111635e31561035470aa
+
+**PREVIEW**
+
+<img width="1677" height="1491" alt="localhost_3001_dashboard" src="https://github.com/user-attachments/assets/6bd6c347-5f25-41b4-8ee5-8d59e933c2f0" />
+
