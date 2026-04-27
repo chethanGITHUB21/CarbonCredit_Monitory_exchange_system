@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Sell Credits — CarbonX</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ol@v10.1.0/ol.css"
+    />
     <link rel="stylesheet" href="/css/new.css" />
   </head>
   <body>
@@ -32,319 +36,370 @@
         Buffer%)
       </p>
 
-      <div id="alert-box"></div>
+      <div class="form-grid">
+        <div class="form-content">
+          <div id="alert-box"></div>
 
-      <form id="sellerForm" novalidate>
-        <!-- Project Details -->
-        <div class="form-section">
-          <h2>Project Details</h2>
-          <div class="form-group">
-            <label>Project Name *</label>
-            <input
-              type="text"
-              name="project_name"
-              placeholder="e.g. Tamil Nadu Reforestation Initiative"
-              required
-            />
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Project Type *</label>
-              <select name="project_type" required>
-                <option value="wetland">Wetland</option>
-                <option value="forest">Forest</option>
-                <option value="trees">Trees</option>
-                <option value="carbon_sink_tech">
-                  Carbon Sink Tech (DAC/CCS)
-                </option>
-                <option value="coastal">Coastal / Blue Carbon</option>
-                <option value="eco_park">Eco Park / Urban Green</option>
-                <option value="river">River / Pond</option>
-              </select>
+          <form id="sellerForm" novalidate>
+            <input type="hidden" name="latitude" id="sellerLatitude" />
+            <input type="hidden" name="longitude" id="sellerLongitude" />
+            <!-- Project Details -->
+            <div class="form-section">
+              <h2>Project Details</h2>
+              <div class="form-group">
+                <label>Project Name *</label>
+                <input
+                  type="text"
+                  name="project_name"
+                  placeholder="e.g. Tamil Nadu Reforestation Initiative"
+                  required
+                />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Project Type *</label>
+                  <select name="project_type" required>
+                    <option value="wetland">Wetland</option>
+                    <option value="forest">Forest</option>
+                    <option value="trees">Trees</option>
+                    <option value="carbon_sink_tech">
+                      Carbon Sink Tech (DAC/CCS)
+                    </option>
+                    <option value="coastal">Coastal / Blue Carbon</option>
+                    <option value="eco_park">Eco Park / Urban Green</option>
+                    <option value="river">River / Pond</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Methodology *</label>
+                  <input
+                    type="text"
+                    name="methodology"
+                    placeholder="e.g. VCS VM0007, Gold Standard GS4GG"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Wetland Area (sq m)</label>
+                  <input
+                    type="number"
+                    name="wetland_area_m2"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Forest Area (sq m)</label>
+                  <input
+                    type="number"
+                    name="forest_area_m2"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Trees (count)</label>
+                  <input type="number" name="trees_count" min="0" step="1" />
+                </div>
+                <div class="form-group">
+                  <label>Carbon Sink Tech (t CO₂/yr)</label>
+                  <input
+                    type="number"
+                    name="carbon_sink_tech"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Coastal Area (sq m)</label>
+                  <input
+                    type="number"
+                    name="coastal_area_m2"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Eco Park Area (sq m)</label>
+                  <input
+                    type="number"
+                    name="eco_park_area_m2"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>River / Pond Area (sq m)</label>
+                  <input
+                    type="number"
+                    name="river_area_m2"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Project Boundary</label>
+                <textarea
+                  name="project_boundary"
+                  rows="3"
+                  placeholder="Describe geographic and operational boundary of the project..."
+                ></textarea>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Methodology *</label>
-              <input
-                type="text"
-                name="methodology"
-                placeholder="e.g. VCS VM0007, Gold Standard GS4GG"
-                required
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Wetland Area (sq m)</label>
-              <input type="number" name="wetland_area_m2" min="0" step="0.01" />
-            </div>
-            <div class="form-group">
-              <label>Forest Area (sq m)</label>
-              <input type="number" name="forest_area_m2" min="0" step="0.01" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Trees (count)</label>
-              <input type="number" name="trees_count" min="0" step="1" />
-            </div>
-            <div class="form-group">
-              <label>Carbon Sink Tech (t CO₂/yr)</label>
-              <input
-                type="number"
-                name="carbon_sink_tech"
-                min="0"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Coastal Area (sq m)</label>
-              <input type="number" name="coastal_area_m2" min="0" step="0.01" />
-            </div>
-            <div class="form-group">
-              <label>Eco Park Area (sq m)</label>
-              <input
-                type="number"
-                name="eco_park_area_m2"
-                min="0"
-                step="0.01"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>River / Pond Area (sq m)</label>
-              <input type="number" name="river_area_m2" min="0" step="0.01" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Project Boundary</label>
-            <textarea
-              name="project_boundary"
-              rows="3"
-              placeholder="Describe geographic and operational boundary of the project..."
-            ></textarea>
-          </div>
-        </div>
 
-        <!-- Emission Calculations -->
-        <div class="form-section">
-          <h2>Emission Baseline & Reduction (t CO₂e/year)</h2>
-          <p
-            style="font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem"
-          >
-            All values expressed in tonnes CO₂e/year. GWP-100 AR5 | IPCC 2006 +
-            2019 Refinement.
-          </p>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Baseline Emission (t CO₂e/yr) *</label>
-              <input
-                type="number"
-                name="baseline_emission"
-                min="0"
-                step="0.01"
-                required
-                oninput="recalcCredits()"
-                placeholder="0.00"
-              />
-              <div class="field-hint">
-                Emissions without the project (business-as-usual)
+            <!-- Emission Calculations -->
+            <div class="form-section">
+              <h2>Emission Baseline & Reduction (t CO₂e/year)</h2>
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--muted);
+                  margin-bottom: 1rem;
+                "
+              >
+                All values expressed in tonnes CO₂e/year. GWP-100 AR5 | IPCC
+                2006 + 2019 Refinement.
+              </p>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Baseline Emission (t CO₂e/yr) *</label>
+                  <input
+                    type="number"
+                    name="baseline_emission"
+                    min="0"
+                    step="0.01"
+                    required
+                    oninput="recalcCredits()"
+                    placeholder="0.00"
+                  />
+                  <div class="field-hint">
+                    Emissions without the project (business-as-usual)
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Annual Reduction (t CO₂e/yr) *</label>
+                  <input
+                    type="number"
+                    name="annual_reduction"
+                    min="0"
+                    step="0.01"
+                    required
+                    oninput="recalcCredits()"
+                    placeholder="0.00"
+                  />
+                  <div class="field-hint">
+                    Verified emission reductions attributable to project
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="form-group">
-              <label>Annual Reduction (t CO₂e/yr) *</label>
-              <input
-                type="number"
-                name="annual_reduction"
-                min="0"
-                step="0.01"
-                required
-                oninput="recalcCredits()"
-                placeholder="0.00"
-              />
-              <div class="field-hint">
-                Verified emission reductions attributable to project
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Leakage (t CO₂e/yr)</label>
+                  <input
+                    type="number"
+                    name="leakage"
+                    min="0"
+                    step="0.01"
+                    value="0"
+                    oninput="recalcCredits()"
+                  />
+                  <div class="field-hint">
+                    Emission displacement outside project boundary
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Buffer Reserve (%)</label>
+                  <input
+                    type="number"
+                    name="buffer_percent"
+                    min="0"
+                    max="50"
+                    value="10"
+                    oninput="recalcCredits()"
+                  />
+                  <div class="field-hint">
+                    Withholding buffer for permanence risk (typically 10–20%)
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Leakage (t CO₂e/yr)</label>
-              <input
-                type="number"
-                name="leakage"
-                min="0"
-                step="0.01"
-                value="0"
-                oninput="recalcCredits()"
-              />
-              <div class="field-hint">
-                Emission displacement outside project boundary
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Buffer Reserve (%)</label>
-              <input
-                type="number"
-                name="buffer_percent"
-                min="0"
-                max="50"
-                value="10"
-                oninput="recalcCredits()"
-              />
-              <div class="field-hint">
-                Withholding buffer for permanence risk (typically 10–20%)
-              </div>
-            </div>
-          </div>
 
-          <!-- Live credit preview -->
-          <div
-            style="
-              background: var(--bg);
-              border-radius: 10px;
-              padding: 1.2rem;
-              margin-top: 0.5rem;
-            "
-          >
-            <div
-              style="
-                font-size: 0.82rem;
-                color: var(--muted);
-                margin-bottom: 0.5rem;
-                font-weight: 600;
-              "
+              <!-- Live credit preview -->
+              <div
+                style="
+                  background: var(--bg);
+                  border-radius: 10px;
+                  padding: 1.2rem;
+                  margin-top: 0.5rem;
+                "
+              >
+                <div
+                  style="
+                    font-size: 0.82rem;
+                    color: var(--muted);
+                    margin-bottom: 0.5rem;
+                    font-weight: 600;
+                  "
+                >
+                  LIVE CALCULATION PREVIEW
+                </div>
+                <div
+                  style="
+                    font-size: 0.8rem;
+                    color: var(--muted);
+                    font-family: monospace;
+                  "
+                >
+                  Net Credits = (Annual Reduction − Leakage) × (1 − Buffer%/100)
+                </div>
+                <div
+                  style="
+                    font-size: 1.6rem;
+                    font-weight: 800;
+                    color: var(--green);
+                    margin-top: 0.5rem;
+                  "
+                  id="creditPreview"
+                >
+                  — t CO₂e
+                </div>
+              </div>
+            </div>
+
+            <!-- Vintage & Pricing -->
+            <div class="form-section">
+              <h2>Vintage & Pricing</h2>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Vintage Start Year *</label>
+                  <input
+                    type="number"
+                    name="vintage_start"
+                    min="2000"
+                    max="2100"
+                    value="2024"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Vintage End Year *</label>
+                  <input
+                    type="number"
+                    name="vintage_end"
+                    min="2000"
+                    max="2100"
+                    value="2034"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Price per Credit (INR / t CO₂e) *</label>
+                <input
+                  type="number"
+                  name="price_per_credit"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="e.g. 12.50"
+                  required
+                />
+                <div class="field-hint">
+                  Market rate varies by project type and verification standard.
+                </div>
+              </div>
+            </div>
+
+            <!-- Verification -->
+            <div class="form-section">
+              <h2>Verification</h2>
+              <div class="form-group">
+                <label>Verification Document URL</label>
+                <input
+                  type="url"
+                  name="verification_doc_url"
+                  placeholder="https://registry.example.com/doc/project-123.pdf"
+                />
+                <div class="field-hint">
+                  Link to VCS, Gold Standard, or other registry certificate
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-green btn-lg" id="submitBtn">
+              🌿 Register Project & List Credits
+            </button>
+          </form>
+
+          <!-- Result -->
+          <div class="result-panel" id="resultPanel">
+            <h2>✅ Project Registered</h2>
+            <div class="result-grid">
+              <div class="result-item">
+                <label>Baseline Emission</label>
+                <div class="value" id="res-baseline">—</div>
+                <div style="opacity: 0.6; font-size: 0.75rem">t CO₂e/yr</div>
+              </div>
+              <div class="result-item">
+                <label>Annual Reduction</label>
+                <div class="value green" id="res-reduction">—</div>
+                <div style="opacity: 0.6; font-size: 0.75rem">t CO₂e/yr</div>
+              </div>
+              <div class="result-item">
+                <label>Net Reduction</label>
+                <div class="value" id="res-net-red">—</div>
+                <div style="opacity: 0.6; font-size: 0.75rem">
+                  after leakage
+                </div>
+              </div>
+              <div class="result-item">
+                <label>Credits Available</label>
+                <div class="value green" id="res-credits">—</div>
+                <div style="opacity: 0.6; font-size: 0.75rem">
+                  t CO₂e (after buffer)
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 1.5rem; opacity: 0.6; font-size: 0.78rem">
+              📚 IPCC 2006 Guidelines | 2019 Refinement | GWP-100 AR5<br />
+              Formula: Net Credits = (Annual Reduction − Leakage) × (1 −
+              Buffer%/100)
+            </div>
+            <a
+              href="/marketplace"
+              class="btn btn-green"
+              style="margin-top: 1rem"
             >
-              LIVE CALCULATION PREVIEW
-            </div>
-            <div
-              style="
-                font-size: 0.8rem;
-                color: var(--muted);
-                font-family: monospace;
-              "
-            >
-              Net Credits = (Annual Reduction − Leakage) × (1 − Buffer%/100)
-            </div>
-            <div
-              style="
-                font-size: 1.6rem;
-                font-weight: 800;
-                color: var(--green);
-                margin-top: 0.5rem;
-              "
-              id="creditPreview"
-            >
-              — t CO₂e
-            </div>
+              View in Marketplace →
+            </a>
           </div>
         </div>
-
-        <!-- Vintage & Pricing -->
-        <div class="form-section">
-          <h2>Vintage & Pricing</h2>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Vintage Start Year *</label>
-              <input
-                type="number"
-                name="vintage_start"
-                min="2000"
-                max="2100"
-                value="2024"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label>Vintage End Year *</label>
-              <input
-                type="number"
-                name="vintage_end"
-                min="2000"
-                max="2100"
-                value="2034"
-                required
-              />
+        <aside class="map-panel">
+          <div class="map-panel-header">
+            <h2>Project Location Map</h2>
+            <p>
+              Review the OpenLayers map while you register your carbon credit
+              project.
+            </p>
+            <div class="map-coords">
+              Selected coordinate: <span id="formCoords">None</span>
             </div>
           </div>
-          <div class="form-group">
-            <label>Price per Credit (INR / t CO₂e) *</label>
-            <input
-              type="number"
-              name="price_per_credit"
-              min="0.01"
-              step="0.01"
-              placeholder="e.g. 12.50"
-              required
-            />
-            <div class="field-hint">
-              Market rate varies by project type and verification standard.
-            </div>
-          </div>
-        </div>
-
-        <!-- Verification -->
-        <div class="form-section">
-          <h2>Verification</h2>
-          <div class="form-group">
-            <label>Verification Document URL</label>
-            <input
-              type="url"
-              name="verification_doc_url"
-              placeholder="https://registry.example.com/doc/project-123.pdf"
-            />
-            <div class="field-hint">
-              Link to VCS, Gold Standard, or other registry certificate
-            </div>
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-green btn-lg" id="submitBtn">
-          🌿 Register Project & List Credits
-        </button>
-      </form>
-
-      <!-- Result -->
-      <div class="result-panel" id="resultPanel">
-        <h2>✅ Project Registered</h2>
-        <div class="result-grid">
-          <div class="result-item">
-            <label>Baseline Emission</label>
-            <div class="value" id="res-baseline">—</div>
-            <div style="opacity: 0.6; font-size: 0.75rem">t CO₂e/yr</div>
-          </div>
-          <div class="result-item">
-            <label>Annual Reduction</label>
-            <div class="value green" id="res-reduction">—</div>
-            <div style="opacity: 0.6; font-size: 0.75rem">t CO₂e/yr</div>
-          </div>
-          <div class="result-item">
-            <label>Net Reduction</label>
-            <div class="value" id="res-net-red">—</div>
-            <div style="opacity: 0.6; font-size: 0.75rem">after leakage</div>
-          </div>
-          <div class="result-item">
-            <label>Credits Available</label>
-            <div class="value green" id="res-credits">—</div>
-            <div style="opacity: 0.6; font-size: 0.75rem">
-              t CO₂e (after buffer)
-            </div>
-          </div>
-        </div>
-        <div style="margin-top: 1.5rem; opacity: 0.6; font-size: 0.78rem">
-          📚 IPCC 2006 Guidelines | 2019 Refinement | GWP-100 AR5<br />
-          Formula: Net Credits = (Annual Reduction − Leakage) × (1 −
-          Buffer%/100)
-        </div>
-        <a href="/marketplace" class="btn btn-green" style="margin-top: 1rem">
-          View in Marketplace →
-        </a>
+          <div id="map" class="map-canvas"></div>
+        </aside>
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/ol@v10.1.0/dist/ol.js"></script>
     <script src="/js/api.js"></script>
+    <script src="/js/form-map.js"></script>
     <script>
       if (!requireAuth()) void 0;
 
@@ -424,6 +479,14 @@
               vintage_end: vintageEnd,
               project_boundary: d.project_boundary,
               verification_doc_url: d.verification_doc_url || null,
+              latitude:
+                d.latitude !== undefined && d.latitude !== ""
+                  ? parseFloat(d.latitude)
+                  : null,
+              longitude:
+                d.longitude !== undefined && d.longitude !== ""
+                  ? parseFloat(d.longitude)
+                  : null,
             });
             if (res?.id) {
               localStorage.setItem("lastProjectId", res.id);

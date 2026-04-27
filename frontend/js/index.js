@@ -48,7 +48,7 @@ const emissionLayer = new ol.layer.Tile({
 const emitterSource = new ol.source.ImageWMS({
   url: "http://localhost:8080/geoserver/wms",
   params: {
-    LAYERS: "carbonGEO:emitter_table",
+    LAYERS: "carbonGEO:emitter_table_pointer", //pointer table is the red dotted table
     CQL_FILTER: "INCLUDE",
   },
   serverType: "geoserver",

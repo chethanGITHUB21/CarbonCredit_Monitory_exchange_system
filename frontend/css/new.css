@@ -838,9 +838,73 @@ tr:hover td {
 
 /* ── Buyer/Seller Form Pages ── */
 .form-page {
-  max-width: 800px;
+  max-width: 1300px;
   margin: 2rem auto;
   padding: 0 1rem;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 2rem;
+  align-items: flex-start;
+}
+.form-content {
+  width: 100%;
+}
+.map-panel {
+  position: sticky;
+  top: 100px;
+  align-self: start;
+  height: calc(100vh - 120px);
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+.map-panel-header {
+  margin-bottom: 1rem;
+}
+.map-panel-header h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  color: var(--dark);
+}
+.map-panel-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.map-coords {
+  margin-top: 0.75rem;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+.map-coords span {
+  font-weight: 700;
+}
+.map-canvas {
+  flex: 1;
+  min-height: 420px;
+  border-radius: calc(var(--radius) - 2px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+@media (max-width: 1120px) {
+  .form-page {
+    max-width: 100%;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .map-panel {
+    position: relative;
+    top: auto;
+    height: 380px;
+  }
 }
 .form-page h1 {
   font-size: 1.6rem;
