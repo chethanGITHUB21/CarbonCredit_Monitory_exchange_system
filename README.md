@@ -123,36 +123,19 @@ node server.js
 
 ## API Endpoints
 
-<<<<<<< HEAD
-| Method | Path | Service | Description |
-| ------ | -------------------------------- | ------------ | ----------------------- |
-| POST | `/api/auth/register` | Node | 2-step org registration |
-| POST | `/api/auth/login` | Node | JWT login |
-| GET | `/api/auth/me` | Node | Current user |
-| POST | `/api/carbon/emission/calculate` | Node→FastAPI | Scope 1/2/3 CO₂e |
-| POST | `/api/carbon/seller/calculate` | Node→FastAPI | Net credit calc |
-| GET | `/api/carbon/dashboard/summary` | Node→FastAPI | Yearly trend |
-| GET | `/api/carbon/dashboard/region` | Node→FastAPI | Regional aggregation |
-| GET | `/api/carbon/marketplace` | Node→DB | Credit listings |
-| POST | `/api/carbon/trade` | Node→DB | Execute trade (atomic) |
-| POST | `/api/seller/project` | Node | Register project |
-| GET | `/api/seller/projects` | Node | My projects |
-=======
-| Method | Path | Service | Description |
-|--------|------|---------|-------------|
-| POST | `/api/auth/register` | Node | 2-step org registration |
-| POST | `/api/auth/login` | Node | JWT login |
-| GET | `/api/auth/me` | Node | Current user |
-| POST | `/api/carbon/emission/calculate` | Node→FastAPI | Scope 1/2/3 CO₂e |
-| POST | `/api/carbon/seller/calculate` | Node→FastAPI | Net credit calc |
-| GET | `/api/carbon/dashboard/summary` | Node→FastAPI | Yearly trend |
-| GET | `/api/carbon/dashboard/region` | Node→FastAPI | Regional aggregation |
-| GET | `/api/carbon/marketplace` | Node→DB | Credit listings |
-| POST | `/api/carbon/trade` | Node→DB | Execute trade (atomic) |
-| POST | `/api/seller/project` | Node | Register project |
-| GET | `/api/seller/projects` | Node | My projects |
-
-> > > > > > > 9b503307fb3435f878ea111635e31561035470aa
+| Method | Path                               | Service      | Description                |
+| ------ | ---------------------------------- | ------------ | -------------------------- |
+| POST   | `/api/auth/register`               | Node         | 2-step org registration    |
+| POST   | `/api/auth/login`                  | Node         | JWT login                  |
+| GET    | `/api/auth/me`                     | Node         | Current user               |
+| POST   | `/api/projects/emission/calculate` | Node→FastAPI | Buyer emission calculation |
+| POST   | `/api/carbon/seller/calculate`     | Node→FastAPI | Net credit calc            |
+| GET    | `/api/carbon/dashboard/summary`    | Node→FastAPI | Yearly trend               |
+| GET    | `/api/carbon/dashboard/region`     | Node→FastAPI | Regional aggregation       |
+| GET    | `/api/carbon/marketplace`          | Node→DB      | Credit listings            |
+| POST   | `/api/carbon/trade`                | Node→DB      | Execute trade (atomic)     |
+| POST   | `/api/seller/project`              | Node         | Register project           |
+| GET    | `/api/seller/projects`             | Node         | My projects                |
 
 ---
 
@@ -210,6 +193,3 @@ node server.js
 <img width="1154" height="621" alt="Screenshot 2026-04-16 092845" src="https://github.com/user-attachments/assets/70a808f9-54de-4de4-be55-494406df9eb3" />
 
 <img width="1154" height="630" alt="Screenshot 2026-04-16 092925" src="https://github.com/user-attachments/assets/33116453-aa53-4d75-ad55-6c081102d36c" />
-
-
-

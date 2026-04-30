@@ -51,9 +51,9 @@ const api = {
     api._fetch("GET", `/api/projects/${id}/absorption`),
 
   // ── 4. ACCOUNTING SERVICE (Python engine via Node proxy) ──────────────────
-  // Primary buyer emission calculation — existing UI uses this, keep as-is
+  // Primary buyer emission calculation now handled by projects.js
   calculateEmission: (body) =>
-    api._fetch("POST", "/api/carbon/emission/calculate", body),
+    api._fetch("POST", "/api/projects/emission/calculate", body),
   // Absorption calculation
   calculateAbsorption: (params) =>
     api._fetch(

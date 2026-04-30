@@ -99,6 +99,160 @@ router.post(
   },
 );
 
+// ── POST /api/projects/emission/calculate ───────────────────────────────────
+router.post("/emission/calculate", auth, async (req, res) => {
+  try {
+    const {
+      project_id,
+      reporting_year,
+      industry_type,
+      scope1,
+      scope2,
+      scope3,
+      forest_area_m2,
+      tree_count,
+      other_absorption_co2e,
+      latitude,
+      longitude,
+    } = req.body;
+
+    const fastapiPayload = {
+      project_id: String(project_id),
+      scope1: scope1 || null,
+      scope2: scope2 || null,
+      scope3: scope3 || null,
+      forest_area_m2: forest_area_m2 || null,
+      tree_count: tree_count || null,
+      other_absorption_co2e: other_absorption_co2e || null,
+    };
+
+    let calcData;
+    try {
+      const fastapiRes = await axios.post(
+        `${FASTAPI}/api/v1/emission/calculate`,
+        fastapiPayload,
+        { timeout: 15000 },
+      );
+      calcData = fastapiRes.data;
+    } catch (pyErr) {
+      console.error(
+        "Python engine error:",
+        pyErr.response?.data || pyErr.message,
+      );
+      return res.status(502).json({
+        error: "Carbon accounting engine unavailable",
+        detail: pyErr.response?.data?.detail || pyErr.message,
+      });
+    }
+
+    const year = reporting_year || new Date().getFullYear();
+    const gwt = calcData.gas_wise_totals || {};
+
+    const bpResult = await pool.query(
+      `INSERT INTO buyer_profiles (user_id, reporting_year, industry_type)
+       VALUES ($1,$2,$3)
+       ON CONFLICT (user_id, reporting_year)
+       DO UPDATE SET industry_type=EXCLUDED.industry_type
+       RETURNING id`,
+      [req.user.id, year, industry_type || scope1?.industry_type || "general"],
+    );
+    const buyerId = bpResult.rows[0].id;
+
+    await pool.query(
+      `INSERT INTO emission_records
+         (buyer_id, scope1_co2e, scope2_co2e, scope3_co2e, total_co2e,
+          gas_co2, gas_ch4, gas_n2o, gas_hfc134a, gas_sf6,
+          total_absorption, net_balance, offset_ratio_pct,
+          raw_input, sector_breakdown, sink_breakdown, year)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+      [
+        buyerId,
+        calcData.scope1_co2e || 0,
+        calcData.scope2_co2e || 0,
+        calcData.scope3_co2e || 0,
+        calcData.total_emission_co2e || 0,
+        gwt.CO2 || 0,
+        gwt.CH4 || 0,
+        gwt.N2O || 0,
+        gwt["HFC-134a"] || 0,
+        gwt.SF6 || 0,
+        calcData.total_absorption_co2e || 0,
+        calcData.net_balance || 0,
+        calcData.offset_ratio_percent || 0,
+        JSON.stringify(req.body),
+        JSON.stringify(calcData.sector_breakdown || {}),
+        JSON.stringify(calcData.sink_breakdown || {}),
+        year,
+      ],
+    );
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      console.warn(
+        "emitter_table_pointer insert skipped: invalid coordinates",
+        {
+          project_id,
+          latitude,
+          longitude,
+        },
+      );
+    } else {
+      const buyerName = req.user.organisation_name || `buyer-${req.user.id}`;
+      const districtName = req.user.district || null;
+      try {
+        await pool.query(
+          `INSERT INTO emitter_table_pointer
+             (id, geom, name, district_id, co2, co, ch4, so2, nh3, area_msq)
+           VALUES (
+             uuid_generate_v4(),
+             ST_SetSRID(ST_MakePoint($1,$2),4326),
+             $3, $4, $5, $6, $7, $8, $9, $10
+           )`,
+          [
+            longitude,
+            latitude,
+            buyerName,
+            null,
+            gwt.CO2 || 0,
+            0,
+            gwt.CH4 || 0,
+            0,
+            0,
+            calcData.total_emission_co2e || 0,
+          ],
+        );
+      } catch (insertErr) {
+        console.error(
+          "emitter_table_pointer insert failed",
+          {
+            name: insertErr.name,
+            message: insertErr.message,
+            code: insertErr.code,
+            detail: insertErr.detail,
+            hint: insertErr.hint,
+            position: insertErr.position,
+          },
+          {
+            project_id,
+            latitude,
+            longitude,
+            co2: gwt.CO2 || 0,
+            ch4: gwt.CH4 || 0,
+            total_emission_co2e: calcData.total_emission_co2e || 0,
+            districtName,
+          },
+        );
+      }
+    }
+
+    return res.json({ ...calcData, project_id, year });
+  } catch (err) {
+    console.error("project emission calculate error:", err.message);
+    return res
+      .status(500)
+      .json({ error: "Failed to calculate emission", detail: err.message });
+  }
+});
+
 // ── GET /api/projects/:id ────────────────────────────────────────────────────
 router.get("/:id", auth, async (req, res) => {
   try {
@@ -127,11 +281,16 @@ router.post("/:id/emission", auth, async (req, res) => {
   try {
     // 1. Verify project exists + belongs to user
     const proj = await pool.query(
-      "SELECT * FROM projects WHERE id=$1 AND user_id=$2",
+      `SELECT p.*, ST_X(p.location) AS longitude, ST_Y(p.location) AS latitude
+       FROM projects p
+       WHERE p.id=$1 AND p.user_id=$2`,
       [project_id, req.user.id],
     );
     if (!proj.rows.length)
       return res.status(404).json({ error: "Project not found or not yours" });
+
+    const latitude = proj.rows[0].latitude;
+    const longitude = proj.rows[0].longitude;
 
     // 2. Build payload for Python engine
     const {
@@ -218,6 +377,64 @@ router.post("/:id/emission", auth, async (req, res) => {
       ],
     );
 
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      console.warn(
+        "emitter_table_pointer insert skipped: invalid coordinates",
+        {
+          project_id,
+          latitude,
+          longitude,
+        },
+      );
+    } else {
+      const buyerName = req.user.organisation_name || `buyer-${req.user.id}`;
+      const districtName = req.user.district || null;
+      try {
+        await pool.query(
+          `INSERT INTO emitter_table_pointer
+             (id, geom, name, district_id, co2, co, ch4, so2, nh3, area_msq)
+           VALUES (
+             uuid_generate_v4(),
+             ST_SetSRID(ST_MakePoint($1,$2),4326),
+             $3, $4, $5, $6, $7, $8, $9, $10
+           )`,
+          [
+            longitude,
+            latitude,
+            buyerName,
+            null,
+            gwt.CO2 || 0,
+            0,
+            gwt.CH4 || 0,
+            0,
+            0,
+            calcData.total_emission_co2e || 0,
+          ],
+        );
+      } catch (insertErr) {
+        console.error(
+          "emitter_table_pointer insert failed",
+          {
+            name: insertErr.name,
+            message: insertErr.message,
+            code: insertErr.code,
+            detail: insertErr.detail,
+            hint: insertErr.hint,
+            position: insertErr.position,
+          },
+          {
+            project_id,
+            latitude,
+            longitude,
+            co2: gwt.CO2 || 0,
+            ch4: gwt.CH4 || 0,
+            total_emission_co2e: calcData.total_emission_co2e || 0,
+            districtName,
+          },
+        );
+      }
+    }
+
     // 5. Also insert into new `emissions` table (doc schema)
     await pool
       .query(
@@ -276,7 +493,9 @@ router.post("/:id/absorption", auth, async (req, res) => {
   const project_id = req.params.id;
   try {
     const proj = await pool.query(
-      "SELECT * FROM projects WHERE id=$1 AND user_id=$2",
+      `SELECT p.*, ST_X(p.location) AS longitude, ST_Y(p.location) AS latitude
+       FROM projects p
+       WHERE p.id=$1 AND p.user_id=$2`,
       [project_id, req.user.id],
     );
     if (!proj.rows.length)
@@ -365,6 +584,63 @@ router.post("/:id/absorption", auth, async (req, res) => {
          VALUES ($1,$2,$3,$4)`,
         [absorptionId, absorbedValue, areaHectares, recordYear],
       );
+    }
+
+    const projectLongitude = proj.rows[0].longitude;
+    const projectLatitude = proj.rows[0].latitude;
+    const projectName = proj.rows[0].project_name || null;
+    const projectDistrictId = proj.rows[0].district_id || null;
+
+    if (
+      !Number.isFinite(projectLatitude) ||
+      !Number.isFinite(projectLongitude)
+    ) {
+      console.warn("eco_projects insert skipped: invalid project location", {
+        project_id,
+        projectLatitude,
+        projectLongitude,
+      });
+    } else {
+      try {
+        await pool.query(
+          `INSERT INTO eco_projects
+             (id, geom, name, co2capture, hectares, district_id)
+           VALUES (
+             uuid_generate_v4(),
+             ST_SetSRID(ST_MakePoint($1,$2),4326),
+             $3, $4, $5, $6
+           )`,
+          [
+            projectLongitude,
+            projectLatitude,
+            projectName,
+            absorbedValue,
+            areaHectares,
+            projectDistrictId,
+          ],
+        );
+      } catch (insertErr) {
+        console.error(
+          "eco_projects insert failed",
+          {
+            name: insertErr.name,
+            message: insertErr.message,
+            code: insertErr.code,
+            detail: insertErr.detail,
+            hint: insertErr.hint,
+            position: insertErr.position,
+          },
+          {
+            project_id,
+            projectLatitude,
+            projectLongitude,
+            projectName,
+            co2capture: absorbedValue,
+            hectares: areaHectares,
+            district_id: projectDistrictId,
+          },
+        );
+      }
     }
 
     return res.json({
