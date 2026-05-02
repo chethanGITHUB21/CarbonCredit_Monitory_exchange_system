@@ -25,6 +25,98 @@ function validationCheck(req, res) {
   return true;
 }
 
+async function insertEcoProjectPoint({
+  project_id,
+  latitude,
+  longitude,
+  name,
+  co2capture,
+  hectares,
+  district_id = null,
+}) {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    console.warn("eco_projects insert skipped: invalid project location", {
+      project_id,
+      projectLatitude: latitude,
+      projectLongitude: longitude,
+    });
+    return;
+  }
+
+  const geomExprs = {
+    POINT: "ST_SetSRID(ST_MakePoint($1,$2),4326)",
+    POINTM: "ST_SetSRID(ST_MakePointM($1,$2,0),4326)",
+    POINTZ: "ST_SetSRID(ST_MakePoint($1,$2,0),4326)",
+    MULTIPOINTZM:
+      "ST_Multi(ST_SetSRID(ST_MakePoint($1,$2,0,0),4326))",
+  };
+
+  const attemptInsert = async (geomName, geomExpr) => {
+    console.log("eco_projects insert attempt", {
+      project_id,
+      geomName,
+      latitude,
+      longitude,
+      name: name || null,
+      co2capture: co2capture || 0,
+      hectares,
+      district_id,
+    });
+    return pool.query(
+      `INSERT INTO eco_projects
+         (geom, name, co2capture, hectares, district_id)
+       VALUES (
+         ${geomExpr},
+         $3, $4, $5, $6
+       )`,
+      [longitude, latitude, name || null, co2capture || 0, hectares, district_id],
+    );
+  };
+
+  let insertErr;
+  for (const [geomName, geomExpr] of Object.entries(geomExprs)) {
+    try {
+      await attemptInsert(geomName, geomExpr);
+      console.log("eco_projects insert success", {
+        project_id,
+        geomName,
+      });
+      return;
+    } catch (err) {
+      console.warn("eco_projects insert variant failed", {
+        project_id,
+        geomName,
+        message: err.message,
+        code: err.code,
+      });
+      insertErr = err;
+    }
+  }
+
+  if (insertErr) {
+    console.error(
+      "eco_projects insert failed",
+      {
+        name: insertErr.name,
+        message: insertErr.message,
+        code: insertErr.code,
+        detail: insertErr.detail,
+        hint: insertErr.hint,
+        position: insertErr.position,
+      },
+      {
+        project_id,
+        projectLatitude: latitude,
+        projectLongitude: longitude,
+        projectName: name || null,
+        co2capture: co2capture || 0,
+        hectares,
+        district_id,
+      },
+    );
+  }
+}
+
 // ── POST /api/projects ───────────────────────────────────────────────────────
 router.post(
   "/",
@@ -51,19 +143,14 @@ router.post(
     } = req.body;
 
     try {
-      const absorptionResult = await pool.query(
-        "INSERT INTO absorptions DEFAULT VALUES RETURNING id",
-      );
-      const absorptionId = absorptionResult.rows[0].id;
-
       // Build optional POINT geometry if lat/lng provided
       const hasGeom = latitude != null && longitude != null;
       const result = await pool.query(
         `INSERT INTO projects
            (user_id, project_name, project_type, description,
-            country_id, state_id, district_id, project_id
+            country_id, state_id, district_id
             ${hasGeom ? ", location" : ""})
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8${hasGeom ? ",ST_SetSRID(ST_MakePoint($9,$10),4326)" : ""})
+         VALUES ($1,$2,$3,$4,$5,$6,$7${hasGeom ? ",ST_SetSRID(ST_MakePoint($8,$9),4326)" : ""})
          RETURNING *`,
         hasGeom
           ? [
@@ -74,7 +161,6 @@ router.post(
               country_id || null,
               state_id || null,
               district_id || null,
-              absorptionId,
               parseFloat(longitude),
               parseFloat(latitude),
             ]
@@ -86,10 +172,15 @@ router.post(
               country_id || null,
               state_id || null,
               district_id || null,
-              absorptionId,
             ],
       );
-      return res.status(201).json(result.rows[0]);
+      const project = result.rows[0];
+
+      await pool.query("INSERT INTO absorptions (project_id) VALUES ($1)", [
+        project.id,
+      ]);
+
+      return res.status(201).json(project);
     } catch (err) {
       console.error("project create error:", err.message);
       return res
@@ -201,9 +292,8 @@ router.post("/emission/calculate", auth, async (req, res) => {
       try {
         await pool.query(
           `INSERT INTO emitter_table_pointer
-             (id, geom, name, district_id, co2, co, ch4, so2, nh3, area_msq)
+             (geom, name, district_id, co2, co, ch4, so2, nh3, area_msq)
            VALUES (
-             uuid_generate_v4(),
              ST_SetSRID(ST_MakePoint($1,$2),4326),
              $3, $4, $5, $6, $7, $8, $9, $10
            )`,
@@ -243,6 +333,19 @@ router.post("/emission/calculate", auth, async (req, res) => {
         );
       }
     }
+
+    const buyerName = req.user.organisation_name || `buyer-${req.user.id}`;
+    const buyerAreaM2 = parseFloat(forest_area_m2);
+    const buyerAreaHectares =
+      Number.isFinite(buyerAreaM2) && buyerAreaM2 > 0 ? buyerAreaM2 / 10000 : null;
+    await insertEcoProjectPoint({
+      project_id,
+      latitude,
+      longitude,
+      name: buyerName,
+      co2capture: calcData.total_absorption_co2e || 0,
+      hectares: buyerAreaHectares,
+    });
 
     return res.json({ ...calcData, project_id, year });
   } catch (err) {
@@ -392,9 +495,8 @@ router.post("/:id/emission", auth, async (req, res) => {
       try {
         await pool.query(
           `INSERT INTO emitter_table_pointer
-             (id, geom, name, district_id, co2, co, ch4, so2, nh3, area_msq)
+             (geom, name, district_id, co2, co, ch4, so2, nh3, area_msq)
            VALUES (
-             uuid_generate_v4(),
              ST_SetSRID(ST_MakePoint($1,$2),4326),
              $3, $4, $5, $6, $7, $8, $9, $10
            )`,
@@ -434,6 +536,20 @@ router.post("/:id/emission", auth, async (req, res) => {
         );
       }
     }
+
+    const buyerName = req.user.organisation_name || `buyer-${req.user.id}`;
+    const buyerAreaM2 = parseFloat(forest_area_m2);
+    const buyerAreaHectares =
+      Number.isFinite(buyerAreaM2) && buyerAreaM2 > 0 ? buyerAreaM2 / 10000 : null;
+    await insertEcoProjectPoint({
+      project_id,
+      latitude,
+      longitude,
+      name: buyerName,
+      co2capture: calcData.total_absorption_co2e || 0,
+      hectares: buyerAreaHectares,
+      district_id: proj.rows[0].district_id || null,
+    });
 
     // 5. Also insert into new `emissions` table (doc schema)
     await pool
@@ -515,7 +631,6 @@ router.post("/:id/absorption", auth, async (req, res) => {
       river,
     } = req.body;
 
-    const absorptionId = proj.rows[0].project_id;
     const area = parseFloat(area_m2);
     const treesCount = parseInt(tree_count);
     const other = parseFloat(other_absorption_co2e);
@@ -527,6 +642,21 @@ router.post("/:id/absorption", auth, async (req, res) => {
       coastal ||
       eco_park ||
       river;
+
+    const absorptionSelect = await pool.query(
+      `SELECT id FROM absorptions WHERE project_id=$1`,
+      [project_id],
+    );
+    let absorptionId;
+    if (absorptionSelect.rows.length) {
+      absorptionId = absorptionSelect.rows[0].id;
+    } else {
+      const insertedAbsorption = await pool.query(
+        `INSERT INTO absorptions (project_id) VALUES ($1) RETURNING id`,
+        [project_id],
+      );
+      absorptionId = insertedAbsorption.rows[0].id;
+    }
 
     const payload = hasSinks
       ? {
@@ -580,68 +710,21 @@ router.post("/:id/absorption", auth, async (req, res) => {
     );
     if (!updateRes.rowCount) {
       await pool.query(
-        `INSERT INTO absorptions (id, co2_absorbed, area_hectares, year)
-         VALUES ($1,$2,$3,$4)`,
-        [absorptionId, absorbedValue, areaHectares, recordYear],
+        `INSERT INTO absorptions (id, project_id, co2_absorbed, area_hectares, year)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [absorptionId, project_id, absorbedValue, areaHectares, recordYear],
       );
     }
 
-    const projectLongitude = proj.rows[0].longitude;
-    const projectLatitude = proj.rows[0].latitude;
-    const projectName = proj.rows[0].project_name || null;
-    const projectDistrictId = proj.rows[0].district_id || null;
-
-    if (
-      !Number.isFinite(projectLatitude) ||
-      !Number.isFinite(projectLongitude)
-    ) {
-      console.warn("eco_projects insert skipped: invalid project location", {
-        project_id,
-        projectLatitude,
-        projectLongitude,
-      });
-    } else {
-      try {
-        await pool.query(
-          `INSERT INTO eco_projects
-             (id, geom, name, co2capture, hectares, district_id)
-           VALUES (
-             uuid_generate_v4(),
-             ST_SetSRID(ST_MakePoint($1,$2),4326),
-             $3, $4, $5, $6
-           )`,
-          [
-            projectLongitude,
-            projectLatitude,
-            projectName,
-            absorbedValue,
-            areaHectares,
-            projectDistrictId,
-          ],
-        );
-      } catch (insertErr) {
-        console.error(
-          "eco_projects insert failed",
-          {
-            name: insertErr.name,
-            message: insertErr.message,
-            code: insertErr.code,
-            detail: insertErr.detail,
-            hint: insertErr.hint,
-            position: insertErr.position,
-          },
-          {
-            project_id,
-            projectLatitude,
-            projectLongitude,
-            projectName,
-            co2capture: absorbedValue,
-            hectares: areaHectares,
-            district_id: projectDistrictId,
-          },
-        );
-      }
-    }
+    await insertEcoProjectPoint({
+      project_id,
+      latitude: proj.rows[0].latitude,
+      longitude: proj.rows[0].longitude,
+      name: proj.rows[0].project_name || null,
+      co2capture: absorbedValue,
+      hectares: areaHectares,
+      district_id: proj.rows[0].district_id || null,
+    });
 
     return res.json({
       project_id,
@@ -666,7 +749,7 @@ router.get("/:id/absorption", auth, async (req, res) => {
       .query(
         `SELECT a.*
          FROM projects p
-         JOIN absorptions a ON a.id = p.project_id
+         JOIN absorptions a ON a.project_id = p.id
          WHERE p.id = $1
          ORDER BY a.year DESC`,
         [req.params.id],
